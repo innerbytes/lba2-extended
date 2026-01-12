@@ -1,11 +1,13 @@
 console.log("Welcome to the LBA2 Extended edition!\n");
 
 const knartaWorkerEntityId = 56;
+const gazogemEntityId = 305;
 const balconyCenter = [20832, 3365, 27271];
 
 let tempStore;
 let exitZoneValue;
 let knartaWorkerId;
+let gazogemId;
 let textId;
 
 scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => {
@@ -55,6 +57,19 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
   knartaWorker.handleMoveScript();
   knartaWorker.disable();
 
+  gazogemId = scene.addObjects();
+  const gazogem = scene.getObject(gazogemId);
+  gazogem.setEntity(gazogemEntityId);
+  gazogem.setArmor(255);
+  gazogem.setControlMode(object.ControlModes.NoMovement);
+  gazogem.setStaticFlags(
+    object.Flags.CanFall |
+      object.Flags.CheckCollisionsWithActors |
+      object.Flags.CheckCollisionsWithScene
+  );
+  gazogem.setPos(balconyCenter.minus([600, 0, 0]));
+  gazogem.disable();
+
   registerCoroutine("dialogIsStarting", dialogIsStarting);
 
   if (sceneLoadMode === scene.LoadModes.PlayerMovedHere) {
@@ -100,6 +115,9 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, "What? Oh no... My gazogem!"));
 
       // Throw item
+      // ida.life(objectId, ida.Life.LM_ANIM_OBJ, knartaWorkerId, 142);
+      ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, gazogemId, 255);
+      ida.life(gazogemId, ida.Life.LM_BETA, 1024);
 
       sceneStore.dialogWithKnartaWorkerStarted = false;
       sceneStore.twinsenForgotGazogem = false;
@@ -118,8 +136,11 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     ) {
       // Start dialog with a knartas worker guy
       ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, knartaWorkerId, 255);
-      ida.life(objectId, ida.Life.LM_CINEMA_MODE, 1);
-      ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.NoMovement);
+
+      // TODO - enable
+      // ida.life(objectId, ida.Life.LM_CINEMA_MODE, 1);
+      // ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.NoMovement);
+
       ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
       // TODO - see if we need to set anim dial for Twinsen
 
