@@ -1,63 +1,144 @@
-/**
- * Welcome to IdaJS modding!
- * Read the documentation here: https://ida.innerbytes.com
- */
-console.log("Welcome to the IdaJS project!\n");
+console.log("Welcome to the LBA2 Extended edition!\n");
 
-/**
- * Start with this event handler to setup every scene, the mod needs to modify
- */
+const knartaWorkerEntityId = 56;
+const balconyCenter = [20832, 3365, 27271];
+
+let tempStore;
+let exitZoneValue;
+let knartaWorkerId;
+let textId;
+
 scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => {
-  // Setup initial behavior for the Twinsen house scene here
-  if (sceneId === 0) {
-    // Do something with Twinsen and Zoe objects here.
-    // See Samples for mod examples
-    const twinsen = scene.getObject(0);
-    const zoe = scene.getObject(4);
+  // TODO - use scene router
+  if (sceneId !== 108) return;
 
-    // Handle move script if you will run custom coroutines on the object
-    // twinsen.handleMoveScript();
+  textId = text.create();
 
-    // Handle life script if you want to have custom behavior on the object
-    // twinsen.handleLifeScript(myLifeScriptFunction);
+  tempStore = {};
 
-    // Register your coroutines
-    registerCoroutine("myCoroutine", myCoroutineFunction);
+  const twinsen = scene.getObject(0);
 
-    // Do more setup - add and modify Zones, Waypoints, Objects, etc - as needed
+  exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
 
-    // If new game started, do initialization of your game variables here as well, as needed:
-    if (sceneLoadMode === scene.LoadModes.NewGameStarted) {
-      const gameStore = useGameStore();
-      gameStore.myVariable = "some value";
+  const exitZoneCount = 3;
+  const exitZoneId = scene.addZones(exitZoneCount);
+  const exitZones = Array.from({ length: exitZoneCount }, (_, i) => scene.getZone(exitZoneId + i));
+  exitZones.forEach((zone) => {
+    zone.setType(object.ZoneTypes.Sceneric);
+    zone.setZoneValue(exitZoneValue);
+  });
+
+  // Area where he jumps to the ground from the Refinery Balcony
+  exitZones[0].setPos1([17019, 1300, 27028]);
+  exitZones[0].setPos2([19203, 3000, 29053]);
+
+  exitZones[1].setPos1([19203, 1300, 27900]);
+  exitZones[1].setPos2([25200, 3000, 29200]);
+
+  exitZones[2].setPos1([21692, 1300, 27175]);
+  exitZones[2].setPos2([24957, 3000, 27805]);
+
+  // Add a knarta worker guy
+  // TODO - make an utility function to add NPCs
+  const knartaWorkerId = scene.addObjects();
+  const knartaWorker = scene.getObject(knartaWorkerId);
+  knartaWorker.setEntity(knartaWorkerEntityId);
+  knartaWorker.setArmor(255);
+  knartaWorker.setControlMode(object.ControlModes.NoMovement);
+  knartaWorker.setStaticFlags(
+    object.Flags.CanFall |
+      object.Flags.CheckCollisionsWithActors |
+      object.Flags.CheckCollisionsWithScene
+  );
+  knartaWorker.setPos(balconyCenter);
+  knartaWorker.setTalkColor(text.Colors.Seafoam);
+  knartaWorker.handleMoveScript();
+  knartaWorker.disable();
+
+  registerCoroutine("dialogIsStarting", dialogIsStarting);
+
+  if (sceneLoadMode === scene.LoadModes.PlayerMovedHere) {
+    const sceneStore = useSceneStore();
+    sceneStore.checkingEntranceFromBalcony = true;
+  }
+
+  twinsen.handleLifeScript((objectId) => {
+    const sceneStore = useSceneStore();
+    if (sceneStore.checkingEntranceFromBalcony) {
+      if (twinsen.getPos().minus(balconyCenter).sqrMagnitude() < 2000 * 2000) {
+        // Check if we have no gazogem with us
+        // TODO - check if we come here second time, after giving gazogem to Baldino, should we still run this? Is it possible to get the second gazogem?
+        const gazogem = scene.getGameVariable(scene.GameVariables.INV_GAZOGEM);
+        if (!gazogem) {
+          console.log("Twinsen forgot his gazogem!");
+          sceneStore.twinsenForgotGazogem = true;
+        }
+      }
+
+      sceneStore.checkingEntranceFromBalcony = false;
+      return true;
     }
 
-    // If it's any other load mode, except loading from saved state, do scene state initialization here - init scene variables, start some coroutines, that should run from scene start, etc
-    if (sceneLoadMode !== scene.LoadModes.WillLoadSavedState) {
-      const sceneStore = useSceneStore();
-      sceneStore.mySceneVariable = 42;
-
-      // Start the previously registered "myCoroutine" on object 0 (Twinsen), with some arguments
-      // startCoroutine(0, "myCoroutine", 1, 2, 3, 4);
+    if (!sceneStore.twinsenForgotGazogem) {
+      return true;
     }
-  }
-  // Setup initial behavior for the outside Twinsen house scene here
-  else if (sceneId === 49) {
-    // Scene setup
-  }
 
-  // Etc
-  // Look at https://lba2remake.net to see the needed scene ids
-  // Teleport to the desired scene in the Editor, the id will be shown in the inspector
-  /* 
-  else if (sceneId === 1) {
-    // Scene setup
-  }
-  */
+    if (sceneStore.dialogWithKnartaWorkerStarting) {
+      return false;
+    }
+
+    if (sceneStore.dialogWithKnartaWorkerStarted) {
+      ida.life(
+        objectId,
+        ida.Life.LM_MESSAGE_OBJ,
+        knartaWorkerId,
+        text.update(textId, "Hey, buddy! Haven't you forgotten something?")
+      );
+
+      // TODO - need to start twinsen turning
+
+      ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, "What? Oh no... My gazogem!"));
+
+      // Throw item
+
+      sceneStore.dialogWithKnartaWorkerStarted = false;
+      sceneStore.twinsenForgotGazogem = false;
+
+      return false;
+    }
+
+    // Checking if Twinsen landed to the ground near the balcony
+    // TODO - add to an util function
+    if (
+      isTriggeredTrue(
+        sceneStore,
+        "landedNearBalcony",
+        ida.lifef(objectId, ida.Life.LF_ZONE) === exitZoneValue
+      )
+    ) {
+      // Start dialog with a knartas worker guy
+      ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, knartaWorkerId, 255);
+      ida.life(objectId, ida.Life.LM_CINEMA_MODE, 1);
+      ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.NoMovement);
+      ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
+      // TODO - see if we need to set anim dial for Twinsen
+
+      startCoroutine(knartaWorkerId, "dialogIsStarting");
+      sceneStore.dialogWithKnartaWorkerStarting = true;
+
+      return false;
+    }
+
+    return true;
+  });
 });
 
-// Example of a coroutine function with some arguments
-function* myCoroutineFunction(arg1, arg2, arg3, etc) {
-  // Your coroutine code goes here
-  yield doMove(ida.Move.TM_ANIM, 0);
+function* dialogIsStarting() {
+  yield doMove(ida.Move.TM_WAIT_NB_SECOND, 2);
+  yield doMove(ida.Move.TM_FACE_TWINSEN, -1);
+  yield doMove(ida.Move.TM_ANIM, 28);
+  yield doSceneStore((sceneStore) => {
+    sceneStore.dialogWithKnartaWorkerStarted = true;
+    sceneStore.dialogWithKnartaWorkerStarting = false;
+  });
 }
