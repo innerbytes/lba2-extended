@@ -1,7 +1,9 @@
 {
   "name": "lba2-extended",
-  "description": "This is a new IdaJS project",
-  "version": "0.2.10",
+  "description": "LBA2 Extended - a global mod for Little Big Adventure 2",
+  "version": "0.0.1",
+  "author": "Andriy Tevelyev",
+  "private": true,
   "scripts": {
     "watch": "node watch.js",
     "sync": "node sync.js %npm_package_name%",
