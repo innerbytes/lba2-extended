@@ -93,23 +93,25 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     sceneStore.state = States.CheckingEntranceFromBalcony;
   }
 
-  // TODO - see if twinsen has any move script on this scene
   // TODO - be able to return move script handling to the vanilla engine
+  // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
   twinsen.handleMoveScript();
 
   twinsen.handleLifeScript((objectId) => {
     const sceneStore = useSceneStore();
 
     if (sceneStore.state === States.CheckingEntranceFromBalcony) {
+      if (
+        scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) > 0 ||
+        scene.getGameVariable(127) > 0 // State after which Twinsen doesn't need gazogem anymore
+      ) {
+        sceneStore.state = States.SceneContinues;
+        return true;
+      }
+
       if (twinsen.getPos().minus(balconyCenter).sqrMagnitude() < 2000 * 2000) {
-        // Check if we have no gazogem with us
-        // TODO - check if we come here second time, after giving gazogem to Baldino, should we still run this? Is it possible to get the second gazogem?
-        const gazogem = scene.getGameVariable(scene.GameVariables.INV_GAZOGEM);
-        if (!gazogem) {
-          console.log("Twinsen forgot his gazogem!");
-          sceneStore.state = States.TwinsenOnBalconyWithoutGazogem;
-          return false;
-        }
+        sceneStore.state = States.TwinsenOnBalconyWithoutGazogem;
+        return false;
       }
 
       sceneStore.state = States.SceneContinues;
@@ -242,7 +244,17 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       return false;
     }
 
-    // TODO - handle collision with Gazogem item to obtain it
+    // Checking collision with Gazogem item to obtain it
+    if (scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) === 0) {
+      if (ida.lifef(objectId, ida.Life.LF_COL) === gazogemId) {
+        ida.life(objectId, ida.Life.LM_KILL_OBJ, gazogemId);
+        ida.life(objectId, ida.Life.LM_FOUND_OBJECT, scene.GameVariables.INV_GAZOGEM);
+        scene.setGameVariable(scene.GameVariables.INV_GAZOGEM, 1);
+        ida.life(objectId, ida.Life.LM_CLR_HOLO_POS, 140);
+        ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
+        ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
+      }
+    }
 
     return true;
   });
