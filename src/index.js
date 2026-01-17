@@ -13,7 +13,8 @@ const States = {
   TwinsenIsTurning: 5,
   DialogContinues: 6,
   WorkerIsGivingGazogem: 7,
-  TwinsenThanks: 8,
+  WorkerGaveGazogem: 8,
+  TwinsenThanks: 9,
 };
 
 let tempStore;
@@ -203,14 +204,24 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       );
 
       sceneStore.state = States.WorkerIsGivingGazogem;
-      ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, gazogemId, 255);
-      ida.life(gazogemId, ida.Life.LM_BETA, 1024);
       startCoroutine(knartaWorkerId, "workerIsGivingGazogem");
 
       return false;
     }
 
     if (sceneStore.state === States.WorkerIsGivingGazogem) {
+      return false;
+    }
+
+    if (sceneStore.state === States.WorkerGaveGazogem) {
+      if (sceneStore.gazogemIsPresent) {
+        return false;
+      }
+
+      ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, gazogemId, 255);
+      ida.life(gazogemId, ida.Life.LM_BETA, 1024);
+      sceneStore.gazogemIsPresent = true;
+
       return false;
     }
 
@@ -290,7 +301,7 @@ function* dialogIsStarting() {
 }
 
 function* twinsenIsTurning(angle) {
-  yield doMove(ida.Move.TM_WAIT_NB_SECOND, 1);
+  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
   yield doMove(ida.Move.TM_ANGLE, angle);
   yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
   yield doSceneStore((sceneStore) => {
@@ -300,9 +311,12 @@ function* twinsenIsTurning(angle) {
 
 function* workerIsGivingGazogem() {
   yield doMove(ida.Move.TM_ANGLE, 3072);
-  yield doMove(ida.Move.TM_ANIM, 142);
-  yield doMove(ida.Move.TM_WAIT_ANIM);
+  yield doSceneStore((sceneStore) => {
+    sceneStore.state = States.WorkerGaveGazogem;
+  });
+  yield doMove(ida.Move.TM_SAMPLE, 153);
   yield doMove(ida.Move.TM_ANIM, 0);
+  yield doMove(ida.Move.TM_FACE_TWINSEN, -1);
   yield doSceneStore((sceneStore) => {
     sceneStore.state = States.TwinsenThanks;
   });
@@ -311,5 +325,7 @@ function* workerIsGivingGazogem() {
 function* workerIsLeaving() {
   yield doMove(ida.Move.TM_ANGLE, 2048);
   yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
+  yield doMove(ida.Move.TM_ANIM, 1);
+  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 6);
   yield doSceneStore((sceneStore) => (sceneStore.workerDisappears = true));
 }
