@@ -141,12 +141,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.DialogStarted) {
-      ida.life(
-        objectId,
-        ida.Life.LM_MESSAGE_OBJ,
-        knartaWorkerId,
-        text.update(textId, "Hey, buddy! Haven't you forgotten something?")
-      );
+      simpleMessage(objectId, knartaWorkerId, "Hey, buddy! Haven't you forgotten something?");
 
       sceneStore.state = States.TwinsenIsTurning;
       ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
@@ -163,46 +158,25 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       // TODO - improve documentation for this function, what is angle_adjust?
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
-      ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, "What? Oh no... My gazogem!"));
-      ida.life(
+      simpleMyMessage(objectId, "What? Oh no... My gazogem!");
+      simpleMessage(objectId, knartaWorkerId, "Ha-ha! You did forget it!");
+      simpleMessage(
         objectId,
-        ida.Life.LM_MESSAGE_OBJ,
         knartaWorkerId,
-        text.update(textId, "Ha-ha! You did forget it!")
+        "Incredible! You did so big effort storming this factory, killed so many of us, just to forget your gazogem in the final room! Aren't you a genius?"
       );
-      ida.life(
+      simpleMyMessage(
         objectId,
-        ida.Life.LM_MESSAGE_OBJ,
+        "Damn! I can't believe it... What am I supposed to do now? Without my gazogem, I won't be able to go back to my world!"
+      );
+      simpleMyMessage(
+        objectId,
+        "You know what? Now I will need to storm the whole factory again just to get another gazogem... Stupid me!"
+      );
+      simpleMessage(
+        objectId,
         knartaWorkerId,
-        text.update(
-          textId,
-          "Incredible! You did so big effort storming this factory, killed so many of us, just to forget your gazogem in the final room! Aren't you a genius?"
-        )
-      );
-      ida.life(
-        objectId,
-        ida.Life.LM_MESSAGE,
-        text.update(
-          textId,
-          "Damn! I can't believe it... What am I supposed to do now? Without my gazogem, I won't be able to go back to my world!"
-        )
-      );
-      ida.life(
-        objectId,
-        ida.Life.LM_MESSAGE,
-        text.update(
-          textId,
-          "You know what? Now I will need to storm the whole factory again just to get another gazogem... Stupid me!"
-        )
-      );
-      ida.life(
-        objectId,
-        ida.Life.LM_MESSAGE_OBJ,
-        knartaWorkerId,
-        text.update(
-          textId,
-          "No! Plese don't! We got enough of you here already! Even the dogs stopped barking and are depressed, staring in one direction.\nPlease, take this gazogem, and never come back!"
-        )
+        "No! Plese don't! We got enough of you here already! Even the dogs stopped barking and are depressed, staring in one direction.\nPlease, take this gazogem, and never come back!"
       );
 
       sceneStore.state = States.WorkerIsGivingGazogem;
@@ -228,13 +202,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.TwinsenThanks) {
-      ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, "I guess... Thank you, friend!"));
-      ida.life(
-        objectId,
-        ida.Life.LM_MESSAGE_OBJ,
-        knartaWorkerId,
-        text.update(textId, "Please, just get lost!")
-      );
+      simpleMyMessage(objectId, "I guess... Thank you, friend!");
+      simpleMessage(objectId, knartaWorkerId, "Please, just get lost!");
 
       startCoroutine(knartaWorkerId, "workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
@@ -340,4 +309,16 @@ function* workerIsLeaving() {
   yield doMove(ida.Move.TM_ANIM, 1);
   yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 6);
   yield doSceneStore((sceneStore) => (sceneStore.workerDisappears = true));
+}
+
+function simpleMyMessage(objectId, message) {
+  simpleMessage(objectId, objectId, message);
+}
+
+function simpleMessage(objectId, speakerId, message) {
+  if (objectId === speakerId) {
+    ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, message));
+  } else {
+    ida.life(objectId, ida.Life.LM_MESSAGE_OBJ, speakerId, text.update(textId, message));
+  }
 }
