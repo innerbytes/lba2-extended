@@ -1,5 +1,6 @@
 const { createActor, createPickableItem } = require("./lib/actor");
 const { IsActorInZoneTrigger } = require("./lib/triggers");
+const { DialogHandler, Dialog } = require("./lib/dialog");
 
 console.log("Welcome to the LBA2 Extended edition!\n");
 
@@ -20,19 +21,15 @@ const States = {
   TwinsenThanks: 9,
 };
 
-let tempStore;
 let exitZoneValue;
 let knartaWorkerId;
 let gazogemId;
-let textId;
 
 scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => {
   // TODO - use scene router
   if (sceneId !== 108) return;
 
-  textId = text.create();
-
-  tempStore = {};
+  const dialogHandler = new DialogHandler();
 
   const twinsen = scene.getObject(0);
 
@@ -64,6 +61,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     handleMove: true,
   });
   knartaWorkerId = knartaWorker.getId();
+
+  const dialogWithWorker = new Dialog(dialogHandler, 0, knartaWorkerId);
 
   // Add the gazogem item
   const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
@@ -127,8 +126,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.DialogStarted) {
-      simpleMessage(objectId, knartaWorkerId, "Hey, buddy... forgetting something?");
-
+      dialogWithWorker.them("Hey, buddy... forgetting something?");
       sceneStore.state = States.TwinsenIsTurning;
       ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
       startCoroutine(objectId, "twinsenIsTurning", getAngleToObject(twinsen, knartaWorker));
@@ -143,24 +141,18 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     if (sceneStore.state === States.DialogContinues) {
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
-      simpleMyMessage(objectId, "What?! Oh no... my Gazogem!");
-      simpleMessage(objectId, knartaWorkerId, "Ha! You really forgot it!");
-      simpleMessage(
-        objectId,
-        knartaWorkerId,
+      dialogWithWorker.me("What?! Oh no... my Gazogem!");
+      dialogWithWorker.them("Ha! You really forgot it!");
+      dialogWithWorker.them(
         "Amazing. You stormed the whole factory, flattened half my colleagues... and then left your Gazogem in the last room. Brilliant. Truly."
       );
-      simpleMyMessage(
-        objectId,
+      dialogWithWorker.me(
         "Blast! I can't believe it... What am I supposed to do now? Without the Gazogem, I can't get back to my world!"
       );
-      simpleMyMessage(
-        objectId,
+      dialogWithWorker.me(
         "You know what? Now I will need to storm the whole factory again... Stupid me!"
       );
-      simpleMessage(
-        objectId,
-        knartaWorkerId,
+      dialogWithWorker.them(
         "No! Please, don't! We've had enough of you already! Even the dogs stopped barking - they are just sitting weirdly, staring into space.\nHere, take this Gazogem... and please never come back!"
       );
 
@@ -187,8 +179,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.TwinsenThanks) {
-      simpleMyMessage(objectId, "Uh... thanks. I guess.");
-      simpleMessage(objectId, knartaWorkerId, "Please. Just get lost!");
+      dialogWithWorker.me("Uh... thanks. I guess.");
+      dialogWithWorker.them("Please. Just get lost!");
 
       startCoroutine(knartaWorkerId, "workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
@@ -282,16 +274,4 @@ function* workerIsLeaving() {
   yield doMove(ida.Move.TM_ANIM, 1);
   yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 6);
   yield doSceneStore((sceneStore) => (sceneStore.workerDisappears = true));
-}
-
-function simpleMyMessage(objectId, message) {
-  simpleMessage(objectId, objectId, message);
-}
-
-function simpleMessage(objectId, speakerId, message) {
-  if (objectId === speakerId) {
-    ida.life(objectId, ida.Life.LM_MESSAGE, text.update(textId, message));
-  } else {
-    ida.life(objectId, ida.Life.LM_MESSAGE_OBJ, speakerId, text.update(textId, message));
-  }
 }
