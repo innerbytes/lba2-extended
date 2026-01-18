@@ -141,7 +141,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.DialogStarted) {
-      simpleMessage(objectId, knartaWorkerId, "Hey, buddy! Haven't you forgotten something?");
+      simpleMessage(objectId, knartaWorkerId, "Hey, buddy... forgetting something?");
 
       sceneStore.state = States.TwinsenIsTurning;
       ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
@@ -158,25 +158,25 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       // TODO - improve documentation for this function, what is angle_adjust?
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
-      simpleMyMessage(objectId, "What? Oh no... My gazogem!");
-      simpleMessage(objectId, knartaWorkerId, "Ha-ha! You did forget it!");
+      simpleMyMessage(objectId, "What?! Oh no... my Gazogem!");
+      simpleMessage(objectId, knartaWorkerId, "Ha! You really forgot it!");
       simpleMessage(
         objectId,
         knartaWorkerId,
-        "Incredible! You did so big effort storming this factory, killed so many of us, just to forget your gazogem in the final room! Aren't you a genius?"
+        "Amazing. You stormed the whole factory, flattened half my colleagues... and then left your Gazogem in the last room. Brilliant. Truly."
       );
       simpleMyMessage(
         objectId,
-        "Damn! I can't believe it... What am I supposed to do now? Without my gazogem, I won't be able to go back to my world!"
+        "Blast! I can't believe it... What am I supposed to do now? Without the Gazogem, I can't get back to my world!"
       );
       simpleMyMessage(
         objectId,
-        "You know what? Now I will need to storm the whole factory again just to get another gazogem... Stupid me!"
+        "You know what? Now I will need to storm the whole factory again... Stupid me!"
       );
       simpleMessage(
         objectId,
         knartaWorkerId,
-        "No! Plese don't! We got enough of you here already! Even the dogs stopped barking and are depressed, staring in one direction.\nPlease, take this gazogem, and never come back!"
+        "No! Please, don't! We've had enough of you already! Even the dogs stopped barking - they are just sitting weirdly, staring into space.\nHere, take this Gazogem... and please never come back!"
       );
 
       sceneStore.state = States.WorkerIsGivingGazogem;
@@ -202,8 +202,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.TwinsenThanks) {
-      simpleMyMessage(objectId, "I guess... Thank you, friend!");
-      simpleMessage(objectId, knartaWorkerId, "Please, just get lost!");
+      simpleMyMessage(objectId, "Uh... thanks. I guess.");
+      simpleMessage(objectId, knartaWorkerId, "Please. Just get lost!");
 
       startCoroutine(knartaWorkerId, "workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
