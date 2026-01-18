@@ -1,5 +1,5 @@
-const { createActor } = require("./lib/actor");
-const { IsActorInZoneTrigger } = require("./lib/triggers"); {
+const { createActor, createPickableItem } = require("./lib/actor");
+const { IsActorInZoneTrigger } = require("./lib/triggers");
 
 console.log("Welcome to the LBA2 Extended edition!\n");
 
@@ -66,10 +66,12 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
   knartaWorkerId = knartaWorker.getId();
 
   // Add the gazogem item
-  // TODO - do this, using createItem function that automatically sets the life script to pick it up
-  const gazogem = createActor(gazogemEntityId, {
+  const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
     isDisabled: true,
     position: balconyCenter.minus([600, 0, 0]),
+    clearHoloPos: 140,
+    recenterCamera: true,
+    resetHeroStance: true,
   });
   gazogemId = gazogem.getId();
 
@@ -194,18 +196,6 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
       sceneStore.state = States.SceneContinues;
 
       return false;
-    }
-
-    // Checking collision with Gazogem item to obtain it
-    if (scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) === 0) {
-      if (ida.lifef(objectId, ida.Life.LF_COL) === gazogemId) {
-        ida.life(objectId, ida.Life.LM_KILL_OBJ, gazogemId);
-        ida.life(objectId, ida.Life.LM_FOUND_OBJECT, scene.GameVariables.INV_GAZOGEM);
-        scene.setGameVariable(scene.GameVariables.INV_GAZOGEM, 1);
-        ida.life(objectId, ida.Life.LM_CLR_HOLO_POS, 140);
-        ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
-        ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
-      }
     }
 
     return true;

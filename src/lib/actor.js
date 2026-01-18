@@ -54,4 +54,51 @@ const createActor = (entityId, options = undefined) => {
   return actor;
 };
 
-module.exports = { createActor };
+// TODO - support more items, now only assumes itemId is a legacy game variable
+const createPickableItem = (entityId, itemId, options = {}) => {
+  options = { displayFoundObject: true, ...options };
+
+  const item = createActor(entityId, { armor: 255, ...options });
+  item.handleLifeScript((objectId) => {
+    // If the item is created enabled by default, user might pass the condition life script, where it should not exist on the scene anymore
+    if (options?.suicideCondition?.(objectId)) {
+      ida.life(objectId, ida.Life.LM_SUICIDE);
+      return;
+    }
+
+    if (scene.getGameVariable(itemId) > 0 && !options?.canHaveMultiple) {
+      ida.life(objectId, ida.Life.LM_SUICIDE);
+      return;
+    }
+
+    // If collided with Hero
+    if (ida.lifef(objectId, ida.Life.LF_COL_OBJ, 0) === objectId) {
+      ida.life(objectId, ida.Life.LM_INVISIBLE, 1);
+
+      if (options?.displayFoundObject) {
+        ida.life(objectId, ida.Life.LM_FOUND_OBJECT, itemId);
+      }
+      scene.setGameVariable(itemId, scene.getGameVariable(itemId) + 1);
+
+      if (options?.resetHeroStance) {
+        ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
+      }
+
+      if (options?.recenterCamera) {
+        ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
+      }
+
+      if (options?.clearHoloPos) {
+        ida.life(objectId, ida.Life.LM_CLR_HOLO_POS, options.clearHoloPos);
+      }
+
+      options?.onPickedUpScript?.(objectId);
+
+      ida.life(objectId, ida.Life.LM_SUICIDE);
+    }
+  });
+
+  return item;
+};
+
+module.exports = { createActor, createPickableItem };
