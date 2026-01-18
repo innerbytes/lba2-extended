@@ -1,3 +1,6 @@
+const { createActor } = require("./lib/actor");
+const { IsActorInZoneTrigger } = require("./lib/triggers"); {
+
 console.log("Welcome to the LBA2 Extended edition!\n");
 
 const knartaWorkerEntityId = 56;
@@ -54,34 +57,21 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
   exitZones[2].setPos2([24957, 3000, 27805]);
 
   // Add a knarta worker guy
-  // TODO - make an utility function to add NPCs
-  knartaWorkerId = scene.addObjects();
-  const knartaWorker = scene.getObject(knartaWorkerId);
-  knartaWorker.setEntity(knartaWorkerEntityId);
-  knartaWorker.setArmor(255);
-  knartaWorker.setControlMode(object.ControlModes.NoMovement);
-  knartaWorker.setStaticFlags(
-    object.Flags.CanFall |
-      object.Flags.CheckCollisionsWithActors |
-      object.Flags.CheckCollisionsWithScene
-  );
-  knartaWorker.setPos(balconyCenter);
-  knartaWorker.setTalkColor(text.Colors.Seafoam);
-  knartaWorker.handleMoveScript();
-  knartaWorker.disable();
+  const knartaWorker = createActor(knartaWorkerEntityId, {
+    position: balconyCenter,
+    talkColor: text.Colors.Seafoam,
+    isDisabled: true,
+    handleMove: true,
+  });
+  knartaWorkerId = knartaWorker.getId();
 
-  gazogemId = scene.addObjects();
-  const gazogem = scene.getObject(gazogemId);
-  gazogem.setEntity(gazogemEntityId);
-  gazogem.setArmor(255);
-  gazogem.setControlMode(object.ControlModes.NoMovement);
-  gazogem.setStaticFlags(
-    object.Flags.CanFall |
-      object.Flags.CheckCollisionsWithActors |
-      object.Flags.CheckCollisionsWithScene
-  );
-  gazogem.setPos(balconyCenter.minus([600, 0, 0]));
-  gazogem.disable();
+  // Add the gazogem item
+  // TODO - do this, using createItem function that automatically sets the life script to pick it up
+  const gazogem = createActor(gazogemEntityId, {
+    isDisabled: true,
+    position: balconyCenter.minus([600, 0, 0]),
+  });
+  gazogemId = gazogem.getId();
 
   registerCoroutine("dialogIsStarting", dialogIsStarting);
   registerCoroutine("twinsenIsTurning", twinsenIsTurning);
@@ -96,6 +86,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
   twinsen.handleMoveScript();
+
+  const twinsenInExitZone = new IsActorInZoneTrigger(0, exitZoneValue);
 
   twinsen.handleLifeScript((objectId) => {
     const sceneStore = useSceneStore();
@@ -119,17 +111,9 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.TwinsenOnBalconyWithoutGazogem) {
-      // TODO - add to an util function
-      if (
-        isTriggeredTrue(
-          sceneStore,
-          "landedNearBalcony",
-          ida.lifef(objectId, ida.Life.LF_ZONE) === exitZoneValue
-        )
-      ) {
+      if (twinsenInExitZone.isTrue()) {
         startDialogWithWorker(objectId);
         sceneStore.state = States.DialogIsStarting;
-
         return false;
       }
 
@@ -155,7 +139,6 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.DialogContinues) {
-      // TODO - improve documentation for this function, what is angle_adjust?
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
       simpleMyMessage(objectId, "What?! Oh no... my Gazogem!");
@@ -243,7 +226,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
   });
 });
 
-// TODO - move to the engine
+// TODO - this will be move to be objectHelper function
 function getAngleToObject(sourceObject, targetObject) {
   const sourcePos = sourceObject.getPos();
   const targetPos = targetObject.getPos();
@@ -252,7 +235,7 @@ function getAngleToObject(sourceObject, targetObject) {
   const deltaZ = targetPos[2] - sourcePos[2];
   const angleRad = Math.atan2(deltaX, deltaZ);
 
-  // TODO - modify convertor functions to always return positive game angles
+  // Convertor functions will be fixed to always return positive angles
   let angle = object.radiansToAngle(angleRad);
   if (angle < 0) {
     angle += 4096;
@@ -272,7 +255,7 @@ function startDialogWithWorker(objectId) {
 
 function* dialogIsStarting() {
   // TODO - support life scripts from coroutine
-  // yield doLife(0, () => {});
+  // yield doLife(() => {});
 
   yield doMove(ida.Move.TM_WAIT_NB_SECOND, 2);
   yield doMove(ida.Move.TM_FACE_TWINSEN, -1);
