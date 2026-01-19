@@ -1,7 +1,12 @@
 const ActorHandler = require("./actorHandler");
 const { DialogHandler } = require("./dialog");
 
-function SceneManager(quests) {
+function SceneManager(sceneLoadMode, quests) {
+  if (sceneLoadMode === undefined || sceneLoadMode === null || typeof sceneLoadMode !== "number") {
+    throw new TypeError("sceneLoadMode must be provided");
+  }
+
+  this.sceneLoadMode = sceneLoadMode;
   this.actorHandlers = new Map();
   this.quests = quests || [];
   this.dialogHandler = new DialogHandler();
@@ -12,7 +17,7 @@ SceneManager.prototype.initQuests = function () {
 };
 
 SceneManager.prototype.initQuestStates = function () {
-  this.quests.forEach((quest) => quest.initState?.());
+  this.quests.forEach((quest) => quest.initState?.(this.sceneLoadMode));
 };
 
 SceneManager.prototype.createActorHandler = function (actorBehavior) {

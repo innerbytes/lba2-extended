@@ -2,9 +2,9 @@ const StateManager = require("./stateManager");
 
 /** @typedef {import("@idajs/types").GameObject} GameObject */
 
-function ActorHandler(actorManager, actorBehavior) {
-  if (!actorManager || typeof actorManager !== "object") {
-    throw new TypeError("actorManager object must be provided");
+function ActorHandler(sceneManager, actorBehavior) {
+  if (!sceneManager || typeof sceneManager !== "object") {
+    throw new TypeError("sceneManager object must be provided");
   }
 
   if (!actorBehavior || typeof actorBehavior !== "object") {
@@ -15,7 +15,7 @@ function ActorHandler(actorManager, actorBehavior) {
     throw new TypeError("actorBehavior must have a valid id property");
   }
 
-  this.actorManager = actorManager;
+  this.sceneManager = sceneManager;
   this.actorBehavior = actorBehavior;
   this.id = actorBehavior.id;
   this.behaviors = actorBehavior.behaviors;
@@ -24,19 +24,15 @@ function ActorHandler(actorManager, actorBehavior) {
   this.stateManager = new StateManager(this.id, selectBehaviorByQuest.bind(this));
 
   // Only selecting relevant quests
-  this.quests = actorManager.quests.filter((quest) => quest.behaviors?.[this.id]);
+  this.quests = sceneManager.quests.filter((quest) => quest.behaviors?.[this.id]);
 }
 
-ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, sceneLoadMode, ...args) {
+ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args) {
   if (!actor || typeof actor !== "object") {
     throw new TypeError("actor object must be provided");
   }
 
-  if (sceneLoadMode === undefined || sceneLoadMode === null || typeof sceneLoadMode !== "number") {
-    throw new TypeError("sceneLoadMode must be provided");
-  }
-
-  this.actorBehavior.init?.call(this, sceneLoadMode, ...args);
+  this.actorBehavior.init?.call(this, this.sceneManager.sceneLoadMode, ...args);
 
   // Life script registration
   if (this.actorBehavior.behaviors && Object.keys(this.actorBehavior.behaviors).length) {
@@ -76,7 +72,7 @@ ActorHandler.prototype.startCoroutine = function (name, ...args) {
 };
 
 ActorHandler.prototype.getActor = function (actorBehaviorId) {
-  return this.actorManager.getActorHandler(actorBehaviorId);
+  return this.sceneManager.getActorHandler(actorBehaviorId);
 };
 
 // TODO - add other coroutine methods as needed

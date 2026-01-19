@@ -8,12 +8,12 @@ const twinsenHouseScene = {
 module.exports = twinsenHouseScene;
 
 function afterLoad(loadMode) {
-  const sceneManager = new SceneManager();
+  const sceneManager = new SceneManager(loadMode);
 
   // Actors
   const zoeHandler = sceneManager.createActorHandler(zoeBehavior);
   const zoe = scene.getObject(4);
-  zoeHandler.init(zoe, loadMode);
+  zoeHandler.init(zoe);
 
   // Quests initialization
   sceneManager.initQuests();
