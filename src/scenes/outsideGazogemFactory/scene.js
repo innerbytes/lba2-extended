@@ -47,7 +47,7 @@ function afterLoad(loadMode) {
 
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
-  twinsenHandler.init(twinsen, props.exitZoneValue);
+  twinsenHandler.init(twinsen, loadMode, props.exitZoneValue);
 
   const knartaWorkerHandler = sceneManager.createActorHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
@@ -55,7 +55,7 @@ function afterLoad(loadMode) {
     talkColor: text.Colors.Seafoam,
     isDisabled: true,
   });
-  props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker);
+  props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker, loadMode);
 
   const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
     isDisabled: true,

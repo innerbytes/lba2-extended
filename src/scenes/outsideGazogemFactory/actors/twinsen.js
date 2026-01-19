@@ -10,7 +10,7 @@ const M = ida.Move;
 // Note - behaviors and coroutines can probably be both main or per-quest, so we can segregate them better
 const actor = {
   id: actors.twinsen,
-  init: function (exitZoneValue) {
+  init: function (loadMode, exitZoneValue) {
     twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
   behaviors: {

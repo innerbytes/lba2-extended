@@ -27,12 +27,16 @@ function ActorHandler(actorManager, actorBehavior) {
   this.quests = actorManager.quests.filter((quest) => quest.behaviors?.[this.id]);
 }
 
-ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args) {
+ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, sceneLoadMode, ...args) {
   if (!actor || typeof actor !== "object") {
     throw new TypeError("actor object must be provided");
   }
 
-  this.actorBehavior.init?.call(this, ...args);
+  if (sceneLoadMode === undefined || sceneLoadMode === null || typeof sceneLoadMode !== "number") {
+    throw new TypeError("sceneLoadMode must be provided");
+  }
+
+  this.actorBehavior.init?.call(this, sceneLoadMode, ...args);
 
   // Life script registration
   if (this.actorBehavior.behaviors && Object.keys(this.actorBehavior.behaviors).length) {
