@@ -25,6 +25,41 @@ let exitZoneValue;
 let knartaWorkerId;
 let gazogemId;
 
+function createDialogs(dialogHandler, knartaWorkerId) {
+  const initialDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
+    dialogSequence: [["them", "Hey, buddy... forgetting something?"]],
+  });
+
+  const mainDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
+    dialogSequence: [
+      ["me", "What?! Oh no... my Gazogem!"],
+      ["them", "Ha! You really forgot it!"],
+      [
+        "them",
+        "Amazing. You stormed the whole factory, flattened half my colleagues... and then left your Gazogem in the last room. Brilliant. Truly.",
+      ],
+      [
+        "me",
+        "Blast! I can't believe it... What am I supposed to do now? Without the Gazogem, I can't get back to my world!",
+      ],
+      ["me", "You know what? Now I will need to storm the whole factory again... Stupid me!"],
+      [
+        "them",
+        "No! Please, don't! We've had enough of you already! Even the dogs stopped barking - they are just sitting weirdly, staring into space.\nHere, take this Gazogem... and please never come back!",
+      ],
+    ],
+  });
+
+  const finalDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
+    dialogSequence: [
+      ["me", "Uh... thanks. I guess."],
+      ["them", "Please. Just get lost!"],
+    ],
+  });
+
+  return { initialDialog, mainDialog, finalDialog };
+}
+
 scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => {
   // TODO - use scene router
   if (sceneId !== 108) return;
@@ -73,6 +108,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     resetHeroStance: true,
   });
   gazogemId = gazogem.getId();
+
+  const { initialDialog, mainDialog, finalDialog } = createDialogs(dialogHandler, knartaWorkerId);
 
   registerCoroutine("dialogIsStarting", dialogIsStarting);
   registerCoroutine("twinsenIsTurning", twinsenIsTurning);
@@ -126,7 +163,8 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.DialogStarted) {
-      dialogWithWorker.them("Hey, buddy... forgetting something?");
+      initialDialog.play();
+
       sceneStore.state = States.TwinsenIsTurning;
       ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
       startCoroutine(objectId, "twinsenIsTurning", getAngleToObject(twinsen, knartaWorker));
@@ -141,20 +179,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     if (sceneStore.state === States.DialogContinues) {
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
-      dialogWithWorker.me("What?! Oh no... my Gazogem!");
-      dialogWithWorker.them("Ha! You really forgot it!");
-      dialogWithWorker.them(
-        "Amazing. You stormed the whole factory, flattened half my colleagues... and then left your Gazogem in the last room. Brilliant. Truly."
-      );
-      dialogWithWorker.me(
-        "Blast! I can't believe it... What am I supposed to do now? Without the Gazogem, I can't get back to my world!"
-      );
-      dialogWithWorker.me(
-        "You know what? Now I will need to storm the whole factory again... Stupid me!"
-      );
-      dialogWithWorker.them(
-        "No! Please, don't! We've had enough of you already! Even the dogs stopped barking - they are just sitting weirdly, staring into space.\nHere, take this Gazogem... and please never come back!"
-      );
+      mainDialog.play();
 
       sceneStore.state = States.WorkerIsGivingGazogem;
       startCoroutine(knartaWorkerId, "workerIsGivingGazogem");
@@ -179,8 +204,7 @@ scene.addEventListener(scene.Events.afterLoadScene, (sceneId, sceneLoadMode) => 
     }
 
     if (sceneStore.state === States.TwinsenThanks) {
-      dialogWithWorker.me("Uh... thanks. I guess.");
-      dialogWithWorker.them("Please. Just get lost!");
+      finalDialog.play();
 
       startCoroutine(knartaWorkerId, "workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);

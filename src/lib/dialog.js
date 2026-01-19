@@ -49,7 +49,7 @@ DialogHandler.prototype.message = function (actorId, message, options = {}) {
   }
 };
 
-function Dialog(dialogHandler, myActorId, theirActorId, myOptions, theirOptions) {
+function Dialog(dialogHandler, myActorId, theirActorId, options = {}) {
   if (!dialogHandler || !(dialogHandler instanceof DialogHandler)) {
     throw new TypeError("an instance of DialogHandler must be provided as first argument");
   }
@@ -65,8 +65,9 @@ function Dialog(dialogHandler, myActorId, theirActorId, myOptions, theirOptions)
   this.dialogHandler = dialogHandler;
   this.myActorId = myActorId;
   this.theirActorId = theirActorId;
-  this.myOptions = myOptions;
-  this.theirOptions = theirOptions;
+  this.myOptions = options?.myDialogOptions || {};
+  this.theirOptions = options?.theirDialogOptions || {};
+  this.dialogSequence = options?.dialogSequence || [];
 }
 
 Dialog.prototype.me = function (message) {
@@ -78,6 +79,44 @@ Dialog.prototype.them = function (message) {
     speakerId: this.theirActorId,
     ...this.theirOptions,
   });
+};
+
+Dialog.prototype.play = function () {
+  if (!this.dialogSequence?.length) {
+    console.warn("Dialog sequence is empty, nothing to play");
+    return;
+  }
+
+  for (const dialogEntry of this.dialogSequence) {
+    if (typeof dialogEntry === "string") {
+      this.me(dialogEntry);
+      continue;
+    }
+
+    if (!Array.isArray(dialogEntry)) {
+      throw new TypeError(
+        `Invalid dialog entry type: ${typeof dialogEntry}; Expected string or array`
+      );
+    }
+
+    if (dialogEntry.length === 1) {
+      this.me(dialogEntry[0]);
+      continue;
+    }
+
+    if (dialogEntry.length > 1) {
+      const [speaker, message] = dialogEntry;
+      if (speaker === "me") {
+        this.me(message);
+      } else if (speaker === "them") {
+        this.them(message);
+      } else {
+        console.warn(`Unknown speaker "${speaker}", defaulting to "me"`);
+        this.me(message);
+      }
+      continue;
+    }
+  }
 };
 
 module.exports = { DialogHandler, Dialog };
