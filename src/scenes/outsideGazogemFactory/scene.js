@@ -1,7 +1,7 @@
 const { createActor, createPickableItem } = require("../../lib/actor");
 const { IsActorInZoneTrigger } = require("../../lib/triggers");
-const { DialogHandler, Dialog } = require("../../lib/dialog");
-const { States } = require("./props");
+const { DialogHandler } = require("../../lib/dialog");
+const { createDialogs } = require("./dialogs");
 
 // Outside of the Gazogem Factory scene (108)
 const Scene = {
@@ -30,96 +30,20 @@ const Scene = {
 };
 module.exports = Scene;
 
+// Entities
 const knartaWorkerEntityId = 56;
 const gazogemEntityId = 305;
-const balconyCenter = [20832, 3365, 27271];
-
-let exitZoneValue;
-let knartaWorkerId;
-let gazogemId;
-
-let twinsenInExitZone;
-
-let initialDialog;
-let mainDialog;
-let finalDialog;
-
-function createDialogs(dialogHandler, knartaWorkerId) {
-  const initialDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
-    dialogSequence: [["them", "Hey, buddy... forgetting something?"]],
-  });
-
-  const mainDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
-    dialogSequence: [
-      ["me", "What?! Oh no... my Gazogem!"],
-      ["them", "Ha! You really forgot it!"],
-      [
-        "them",
-        "Amazing. You stormed the whole factory, flattened half my colleagues... and then left your Gazogem in the last room. Brilliant. Truly.",
-      ],
-      [
-        "me",
-        "Blast! I can't believe it... What am I supposed to do now? Without the Gazogem, I can't get back to my world!",
-      ],
-      ["me", "You know what? Now I will need to storm the whole factory again... Stupid me!"],
-      [
-        "them",
-        "No! Please, don't! We've had enough of you already! Even the dogs stopped barking - they are just sitting weirdly, staring into space.\nHere, take this Gazogem... and please never come back!",
-      ],
-    ],
-  });
-
-  const finalDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
-    dialogSequence: [
-      ["me", "Uh... thanks. I guess."],
-      ["them", "Please. Just get lost!"],
-    ],
-  });
-
-  return { initialDialog, mainDialog, finalDialog };
-}
-
-// TODO - this will be moved to be an objectHelper function
-function getAngleToObject(sourceObject, targetObject) {
-  const sourcePos = sourceObject.getPos();
-  const targetPos = targetObject.getPos();
-
-  const deltaX = targetPos[0] - sourcePos[0];
-  const deltaZ = targetPos[2] - sourcePos[2];
-  const angleRad = Math.atan2(deltaX, deltaZ);
-
-  // Convertor functions will be fixed to always return positive angles
-  let angle = object.radiansToAngle(angleRad);
-  if (angle < 0) {
-    angle += 4096;
-  }
-  return angle;
-}
-
-function startDialogWithWorker(objectId) {
-  ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, knartaWorkerId, 255);
-  ida.life(objectId, ida.Life.LM_CINEMA_MODE, 1);
-  ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.NoMovement);
-  ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
-  ida.life(objectId, ida.Life.LM_SET_ANIM_DIAL, 28);
-
-  startCoroutine(knartaWorkerId, "dialogIsStarting");
-}
 
 function afterLoad(loadMode) {
-  const dialogHandler = new DialogHandler();
-
-  const twinsen = scene.getObject(0);
-
-  exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
-  Scene.props.exitZoneValue = exitZoneValue;
+  // Zones
+  Scene.props.exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
 
   const exitZoneCount = 3;
   const exitZoneId = scene.addZones(exitZoneCount);
   const exitZones = Array.from({ length: exitZoneCount }, (_, i) => scene.getZone(exitZoneId + i));
   exitZones.forEach((zone) => {
     zone.setType(object.ZoneTypes.Sceneric);
-    zone.setZoneValue(exitZoneValue);
+    zone.setZoneValue(Scene.props.exitZoneValue);
   });
 
   // Area where he jumps to the ground from the Refinery Balcony
@@ -132,48 +56,47 @@ function afterLoad(loadMode) {
   exitZones[2].setPos1([21692, 1300, 27175]);
   exitZones[2].setPos2([24957, 3000, 27805]);
 
-  // Add a knarta worker guy
+  // Actors
+  // TODO - the hero actor handler should also get authority on handling quest states
+  const twinsenHandler = new ActorHandler(twinsenBahavior);
+  const twinsen = scene.getObject(0);
+  // TODO - be able to return move script handling to the vanilla engine
+  // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
+  twinsen.handleMoveScript();
+  twinsen.handleLifeScript(twinsenHandler.handleLife);
+  twinsenHandler.init(twinsen);
+
+  const knartaWorkerHandler = new ActorHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
-    position: balconyCenter,
+    position: Scene.props.balconyCenter,
     talkColor: text.Colors.Seafoam,
     isDisabled: true,
     handleMove: true,
-    handleLife: knartaWorkerLife,
+    handleLife: knartaWorkerHandler.handleLife,
   });
-  knartaWorkerId = knartaWorker.getId();
-  Scene.props.knartaWorkerId = knartaWorkerId;
+  Scene.props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker);
 
-  // Add the gazogem item
   const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
     isDisabled: true,
-    position: balconyCenter.minus([600, 0, 0]),
+    position: Scene.props.balconyCenter.minus([600, 0, 0]),
     clearHoloPos: 140,
     recenterCamera: true,
     resetHeroStance: true,
   });
-  gazogemId = gazogem.getId();
-  Scene.props.gazogemId = gazogemId;
-  ({ initialDialog, mainDialog, finalDialog } = createDialogs(dialogHandler, knartaWorkerId));
+  Scene.props.gazogemId = gazogem.getId();
 
-  twinsenInExitZone = new IsActorInZoneTrigger(0, exitZoneValue);
+  // Dialogs
+  const dialogHandler = new DialogHandler();
+  Scene.dialogs = createDialogs(dialogHandler, Scene.props.knartaWorkerId);
 
-  // TODO - be able to return move script handling to the vanilla engine
-  // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
-  twinsen.handleMoveScript();
-  twinsen.handleLifeScript(twinsenLife);
-
-  // TODO - automate registering coroutines for the scene?
-  registerCoroutine("dialogIsStarting", dialogIsStarting);
-  registerCoroutine("twinsenIsTurning", twinsenIsTurning);
-  registerCoroutine("workerIsGivingGazogem", workerIsGivingGazogem);
-  registerCoroutine("workerIsLeaving", workerIsLeaving);
-
+  // Init state
   if (loadMode === scene.LoadModes.PlayerMovedHere) {
     const sceneStore = useSceneStore();
-    sceneStore.state = States.CheckingEntranceFromBalcony;
+    sceneStore.state = Scene.states.CheckingEntranceFromBalcony;
   }
 }
 
+/*
 function twinsenLife(objectId) {
   const sceneStore = useSceneStore();
 
@@ -281,44 +204,4 @@ function knartaWorkerLife(objectId) {
     sceneStore.workerDisappears = false;
   }
 }
-
-function* dialogIsStarting() {
-  // TODO - support life scripts from coroutine
-  // yield doLife(() => {});
-
-  yield doMove(ida.Move.TM_WAIT_NB_SECOND, 2);
-  yield doMove(ida.Move.TM_FACE_TWINSEN, -1);
-  yield doSceneStore((sceneStore) => {
-    sceneStore.state = States.DialogStarted;
-  });
-}
-
-function* twinsenIsTurning(angle) {
-  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
-  yield doMove(ida.Move.TM_ANGLE, angle);
-  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
-  yield doSceneStore((sceneStore) => {
-    sceneStore.state = States.DialogContinues;
-  });
-}
-
-function* workerIsGivingGazogem() {
-  yield doMove(ida.Move.TM_ANGLE, 3072);
-  yield doSceneStore((sceneStore) => {
-    sceneStore.state = States.WorkerGaveGazogem;
-  });
-  yield doMove(ida.Move.TM_SAMPLE, 153);
-  yield doMove(ida.Move.TM_ANIM, 0);
-  yield doMove(ida.Move.TM_FACE_TWINSEN, -1);
-  yield doSceneStore((sceneStore) => {
-    sceneStore.state = States.TwinsenThanks;
-  });
-}
-
-function* workerIsLeaving() {
-  yield doMove(ida.Move.TM_ANGLE, 2048);
-  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
-  yield doMove(ida.Move.TM_ANIM, 1);
-  yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 6);
-  yield doSceneStore((sceneStore) => (sceneStore.workerDisappears = true));
-}
+*/

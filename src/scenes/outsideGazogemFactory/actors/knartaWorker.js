@@ -1,4 +1,4 @@
-const Scene = require("./scene");
+const Scene = require("../scene");
 
 const actorName = "knartaWorker";
 

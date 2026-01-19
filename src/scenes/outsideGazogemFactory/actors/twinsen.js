@@ -1,5 +1,5 @@
-const Scene = require("./scene");
-const { IsActorInZoneTrigger } = require("../../lib/triggers");
+const Scene = require("../scene");
+const { IsActorInZoneTrigger } = require("../../../lib/triggers");
 
 let twinsenInExitZoneTrigger;
 
@@ -48,7 +48,7 @@ const actor = {
       return true;
     },
     dialogAboutGazogemStart: function (objectId) {
-      Scene.props.initialDialog.play();
+      Scene.dialogs.initialDialog.play();
       const sceneStore = useSceneStore();
 
       sceneStore.state = Scene.states.TwinsenIsTurning;
@@ -65,7 +65,7 @@ const actor = {
 
       ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
 
-      Scene.props.mainDialog.play();
+      Scene.dialogs.mainDialog.play();
 
       sceneStore.state = Scene.states.WorkerIsGivingGazogem;
 
@@ -77,7 +77,7 @@ const actor = {
     dialogGazogemFinal: function (objectId) {
       const sceneStore = useSceneStore();
 
-      Scene.props.finalDialog.play();
+      Scene.dialogs.finalDialog.play();
 
       startCoroutine(Scene.props.knartaWorkerId, "workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
