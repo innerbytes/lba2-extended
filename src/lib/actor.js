@@ -43,6 +43,10 @@ const createActor = (entityId, options = undefined) => {
     actor.handleMoveScript();
   }
 
+  if (options?.handleLife && typeof options.handleLife === "function") {
+    actor.handleLifeScript(options.handleLife);
+  }
+
   if (options?.isDisabled) {
     actor.disable();
   } else if (options?.hp) {
