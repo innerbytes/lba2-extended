@@ -4,7 +4,6 @@ const { actors, props } = require("../props");
 
 const quest = createQuest({
   id: "forgotGazogem",
-  actors: [actors.twinsen, actors.knartaWorker],
   init: function (sceneManager) {
     this.dialogs = createDialogs(sceneManager.dialogHandler, props.knartaWorkerId);
   },
@@ -13,7 +12,8 @@ const quest = createQuest({
     sceneStore.state = this.states.CheckingEntranceFromBalcony;
   },
   states: {
-    SceneContinues: 0,
+    // 0 state means quest is not active
+    None: 0,
     CheckingEntranceFromBalcony: 1,
     TwinsenOnBalconyWithoutGazogem: 2,
     DialogIsStarting: 3,
@@ -24,49 +24,49 @@ const quest = createQuest({
     WorkerGaveGazogem: 8,
     TwinsenThanks: 9,
   },
-  selectBehavior: function (actorHandlerId) {
-    const sceneStore = this.useSceneStore();
-    const state = sceneStore.state;
+  behaviors: {
+    [actors.twinsen]: function (quest) {
+      const sceneStore = quest.useSceneStore();
+      const state = sceneStore.state;
+      const States = quest.states;
 
-    if (actorHandlerId === actors.twinsen) {
-      if (!state || state === this.states.SceneContinues) {
-        return "";
+      switch (state) {
+        case undefined:
+        case States.None:
+          return "";
+        case States.CheckingEntranceFromBalcony:
+          return "checkingEntranceFromBalcony";
+        case States.TwinsenOnBalconyWithoutGazogem:
+          return "onBalconyWithoutGazogem";
+        case States.DialogStarted:
+          return "dialogAboutGazogemStart";
+        case States.DialogContinues:
+          return "dialogAboutGazogemMain";
+        case States.TwinsenThanks:
+          return "dialogAboutGazogemFinal";
+        default:
+          return "busy";
       }
+    },
+    [actors.knartaWorker]: function (quest) {
+      const sceneStore = quest.useSceneStore();
 
-      if (state === this.states.CheckingEntranceFromBalcony) {
-        return "checkingEntranceFromBalcony";
-      }
-      if (state === this.states.TwinsenOnBalconyWithoutGazogem) {
-        return "onBalconyWithoutGazogem";
-      }
-      if (state === this.states.DialogStarted) {
-        return "dialogAboutGazogemStart";
-      }
-      if (state === this.states.DialogContinues) {
-        return "dialogAboutGazogemMain";
-      }
-      if (state === this.states.TwinsenThanks) {
-        return "dialogAboutGazogemFinal";
-      }
-
-      return "busy";
-    } else if (actorHandlerId === actors.knartaWorker) {
       if (sceneStore.workerDisappears) {
         return "disappear";
       }
 
-      if (state == this.states.DialogIsStarting) {
-        return "start";
+      const state = sceneStore.state;
+      const States = quest.states;
+
+      switch (state) {
+        case States.DialogIsStarting:
+          return "start";
+        case States.WorkerGaveGazogem:
+          return "giveGazogem";
+        default:
+          return "";
       }
-
-      if (state === this.states.WorkerGaveGazogem) {
-        return "giveGazogem";
-      }
-
-      return "";
-    }
-
-    return "";
+    },
   },
 });
 

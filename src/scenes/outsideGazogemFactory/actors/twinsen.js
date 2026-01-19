@@ -24,7 +24,7 @@ const actor = {
         scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) > 0 ||
         scene.getGameVariable(127) > 0 // State after which Twinsen doesn't need gazogem anymore
       ) {
-        sceneStore.state = States.SceneContinues;
+        sceneStore.state = States.None;
         return true;
       }
 
@@ -34,7 +34,8 @@ const actor = {
         return false;
       }
 
-      sceneStore.state = States.SceneContinues;
+      // Did enter the scene from somewhere else, the quest is irrelevant now
+      sceneStore.state = States.None;
       return true;
     },
     onBalconyWithoutGazogem: function (objectId) {
@@ -84,7 +85,7 @@ const actor = {
       ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.PlayerControl);
 
       const sceneStore = forgotGazogemQuest.useSceneStore();
-      sceneStore.state = forgotGazogemQuest.states.SceneContinues;
+      sceneStore.state = forgotGazogemQuest.states.None;
 
       return false;
     },

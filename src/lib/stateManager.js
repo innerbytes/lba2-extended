@@ -8,7 +8,6 @@ function StateManager(actorHandlerId, calculateBehavior) {
   }
 
   this.actorHandlerId = actorHandlerId;
-  this.behavior = "";
   this.calculateBehavior = calculateBehavior;
 }
 
