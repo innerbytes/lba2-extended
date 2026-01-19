@@ -3,18 +3,18 @@ const { IsActorInZoneTrigger } = require("../../../lib/triggers");
 
 let twinsenInExitZoneTrigger;
 
-// TODO - behaviors and coroutines can probably be main or per-quest, so we can segregate them better
+const L = ida.Life;
+const M = ida.Move;
+
+// Note - behaviors and coroutines can probably be main or per-quest, so we can segregate them better
 const actor = {
+  id: Scene.actors.twinsen,
   init: function (exitZoneValue) {
     twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
   behaviours: {
-    default: function () {
-      return true;
-    },
-    busy: function () {
-      return false;
-    },
+    default: () => true,
+    busy: () => false,
     checkingEntranceFromBalcony: function () {
       const sceneStore = useSceneStore();
       const States = Scene.states;
@@ -37,10 +37,16 @@ const actor = {
       return true;
     },
     onBalconyWithoutGazogem: function (objectId) {
-      const sceneStore = useSceneStore();
-
       if (twinsenInExitZoneTrigger.isTrue()) {
-        startDialogWithWorker(objectId);
+        ida.life(objectId, L.LM_SET_LIFE_POINT_OBJ, Scene.props.knartaWorkerId, 255);
+        ida.life(objectId, L.LM_CINEMA_MODE, 1);
+        ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.NoMovement);
+        ida.life(objectId, L.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
+        ida.life(objectId, L.LM_SET_ANIM_DIAL, 28);
+
+        this.getActor(Scene.actors.knartaWorker).startCoroutine("startingDialog");
+
+        const sceneStore = useSceneStore();
         sceneStore.state = Scene.states.DialogIsStarting;
         return false;
       }
@@ -49,45 +55,35 @@ const actor = {
     },
     dialogAboutGazogemStart: function (objectId) {
       Scene.dialogs.initialDialog.play();
-      const sceneStore = useSceneStore();
 
+      const sceneStore = useSceneStore();
       sceneStore.state = Scene.states.TwinsenIsTurning;
-      ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
+      ida.life(objectId, L.LM_CINEMA_MODE, 0);
 
       const twinsen = scene.getObject(0);
       const knartaWorker = scene.getObject(Scene.props.knartaWorkerId);
-      startCoroutine(
-        objectId,
-        this.getCoroutine("turningTowardsWorker"),
-        getAngleToObject(twinsen, knartaWorker)
-      );
+      this.startCoroutine("turningTowardsWorker", getAngleToObject(twinsen, knartaWorker));
 
       return false;
     },
     dialogAboutGazogemMain: function (objectId) {
-      const sceneStore = useSceneStore();
-
-      ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
-
+      ida.life(objectId, L.LM_CAMERA_CENTER, 0);
       Scene.dialogs.mainDialog.play();
 
+      const sceneStore = useSceneStore();
       sceneStore.state = Scene.states.WorkerIsGivingGazogem;
 
-      // TODO - do not directly start coroutine on other object, but communicate through message
-      // startCoroutine(Scene.props.knartaWorkerId, "workerIsGivingGazogem");
-      this.message("workerIsGivingGazogem");
+      this.getActor(Scene.actors.knartaWorker).startCoroutine("givingGazogem");
 
       return false;
     },
     dialogGazogemFinal: function (objectId) {
-      const sceneStore = useSceneStore();
-
       Scene.dialogs.finalDialog.play();
 
-      // startCoroutine(Scene.props.knartaWorkerId, "workerIsLeaving");
-      this.message("workerIsLeaving");
-      ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
+      this.getActor(Scene.actors.knartaWorker).startCoroutine("leaving");
+      ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.PlayerControl);
 
+      const sceneStore = useSceneStore();
       sceneStore.state = Scene.states.SceneContinues;
 
       return false;
@@ -96,9 +92,9 @@ const actor = {
 
   coroutines: {
     turningTowardsWorker: function* (targetAngle) {
-      yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
-      yield doMove(ida.Move.TM_ANGLE, targetAngle);
-      yield doMove(ida.Move.TM_WAIT_NB_DIZIEME, 5);
+      yield doMove(M.TM_WAIT_NB_DIZIEME, 5);
+      yield doMove(M.TM_ANGLE, targetAngle);
+      yield doMove(M.TM_WAIT_NB_DIZIEME, 5);
       yield doSceneStore((sceneStore) => {
         sceneStore.state = Scene.states.DialogContinues;
       });
@@ -121,14 +117,4 @@ function getAngleToObject(sourceObject, targetObject) {
     angle += 4096;
   }
   return angle;
-}
-
-function startDialogWithWorker(objectId) {
-  ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, Scene.props.knartaWorkerId, 255);
-  ida.life(objectId, ida.Life.LM_CINEMA_MODE, 1);
-  ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.NoMovement);
-  ida.life(objectId, ida.Life.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
-  ida.life(objectId, ida.Life.LM_SET_ANIM_DIAL, 28);
-
-  startCoroutine(Scene.props.knartaWorkerId, "dialogIsStarting");
 }

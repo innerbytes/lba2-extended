@@ -1,31 +1,20 @@
 const { createActor, createPickableItem } = require("../../lib/actor");
-const { IsActorInZoneTrigger } = require("../../lib/triggers");
 const { DialogHandler } = require("../../lib/dialog");
-const { createDialogs } = require("./dialogs");
+const forgotGazogemQuest = require("./quests/forgotGazogem");
 
 // Outside of the Gazogem Factory scene (108)
 const Scene = {
   id: 108,
   afterLoad: afterLoad,
-  // actors: [twinsen, knartaWorker]
+  actors: {
+    twinsen: "twinsen",
+    knartaWorker: "knartaWorker",
+  },
   props: {
     balconyCenter: [20832, 3365, 27271],
     exitZoneValue: null,
     knartaWorkerId: null,
     gazogemId: null,
-  },
-  // TODO - can control it using quest manager, as each quest can have different states
-  states: {
-    SceneContinues: 0,
-    CheckingEntranceFromBalcony: 1,
-    TwinsenOnBalconyWithoutGazogem: 2,
-    DialogIsStarting: 3,
-    DialogStarted: 4,
-    TwinsenIsTurning: 5,
-    DialogContinues: 6,
-    WorkerIsGivingGazogem: 7,
-    WorkerGaveGazogem: 8,
-    TwinsenThanks: 9,
   },
 };
 module.exports = Scene;
@@ -81,14 +70,13 @@ function afterLoad(loadMode) {
   });
   Scene.props.gazogemId = gazogem.getId();
 
-  // Dialogs
+  // Quests
   const dialogHandler = new DialogHandler();
-  Scene.dialogs = createDialogs(dialogHandler, Scene.props.knartaWorkerId);
+  forgotGazogemQuest.init(dialogHandler, Scene.props.knartaWorkerId);
 
-  // Init state
+  // Init quest states
   if (loadMode === scene.LoadModes.PlayerMovedHere) {
-    const sceneStore = useSceneStore();
-    sceneStore.state = Scene.states.CheckingEntranceFromBalcony;
+    forgotGazogemQuest.initState();
   }
 }
 

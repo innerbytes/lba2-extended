@@ -1,6 +1,30 @@
-const { Dialog } = require("../../lib/dialog");
+const { Dialog } = require("../../../lib/dialog");
 
-// TODO - move dialogs to particular quest?
+const quest = {
+  id: "forgotGazogem",
+  init: function (dialogHandler, knartaWorkerId) {
+    createDialogs(dialogHandler, knartaWorkerId);
+  },
+  initState: function () {
+    const sceneStore = useSceneStore();
+    sceneStore.state = this.states.CheckingEntranceFromBalcony;
+  },
+  states: {
+    SceneContinues: 0,
+    CheckingEntranceFromBalcony: 1,
+    TwinsenOnBalconyWithoutGazogem: 2,
+    DialogIsStarting: 3,
+    DialogStarted: 4,
+    TwinsenIsTurning: 5,
+    DialogContinues: 6,
+    WorkerIsGivingGazogem: 7,
+    WorkerGaveGazogem: 8,
+    TwinsenThanks: 9,
+  },
+};
+
+module.exports = quest;
+
 function createDialogs(dialogHandler, knartaWorkerId) {
   const initialDialog = new Dialog(dialogHandler, 0, knartaWorkerId, {
     dialogSequence: [["them", "Hey, buddy... forgetting something?"]],
@@ -35,5 +59,3 @@ function createDialogs(dialogHandler, knartaWorkerId) {
 
   return { initialDialog, mainDialog, finalDialog };
 }
-
-module.exports = { createDialogs };
