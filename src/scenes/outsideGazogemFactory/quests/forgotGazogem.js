@@ -4,6 +4,7 @@ const { actors, props } = require("../props");
 
 const quest = createQuest({
   id: "forgotGazogem",
+  actors: [actors.twinsen, actors.knartaWorker],
   init: function (sceneManager) {
     this.dialogs = createDialogs(sceneManager.dialogHandler, props.knartaWorkerId);
   },

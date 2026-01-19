@@ -13,15 +13,6 @@ const actor = {
   init: function (exitZoneValue) {
     twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
-  // TODO - this can be common function for actor handler later, if it has info about all quests
-  selectBehavior: function () {
-    const behavior = forgotGazogemQuest.selectBehavior(this.id);
-    if (behavior) {
-      return behavior;
-    }
-
-    return "";
-  },
   behaviors: {
     default: () => true,
     busy: () => false,

@@ -20,9 +20,8 @@ function ActorHandler(actorManager, actorBehavior) {
   this.id = actorBehavior.id;
   this.behaviors = actorBehavior.behaviors;
   this.defaultBehavior = actorBehavior.behaviors.default;
-  this.selectBehavior = actorBehavior.selectBehavior;
   this.coroutines = actorBehavior.coroutines;
-  this.stateManager = new StateManager(this.id, this.selectBehavior?.bind(this));
+  this.stateManager = new StateManager(this.id, selectBehavior.bind(this));
 }
 
 ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args) {
@@ -83,6 +82,18 @@ function registerCoroutines(id, coroutines) {
   for (const [name, coroutine] of Object.entries(coroutines)) {
     registerCoroutine(getCoroutineName(id, name), coroutine);
   }
+}
+
+function selectBehavior() {
+  const quests = this.actorManager.quests;
+  for (const quest of quests) {
+    const behavior = quest.selectBehavior?.(this.id);
+    if (behavior) {
+      return behavior;
+    }
+  }
+
+  return "";
 }
 
 module.exports = ActorHandler;

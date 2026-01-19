@@ -1,21 +1,21 @@
 const ActorHandler = require("./actorHandler");
 const { DialogHandler } = require("./dialog");
 
-function ActorManager(quests) {
+function SceneManager(quests) {
   this.actorHandlers = new Map();
   this.quests = quests || [];
   this.dialogHandler = new DialogHandler();
 }
 
-ActorManager.prototype.initQuests = function () {
+SceneManager.prototype.initQuests = function () {
   this.quests.forEach((quest) => quest.init?.(this));
 };
 
-ActorManager.prototype.initQuestStates = function () {
+SceneManager.prototype.initQuestStates = function () {
   this.quests.forEach((quest) => quest.initState?.());
 };
 
-ActorManager.prototype.createActorHandler = function (actorBehavior) {
+SceneManager.prototype.createActorHandler = function (actorBehavior) {
   const id = actorBehavior.id;
 
   if (!id) {
@@ -27,8 +27,8 @@ ActorManager.prototype.createActorHandler = function (actorBehavior) {
   return actorHandler;
 };
 
-ActorManager.prototype.getActorHandler = function (actorHandlerId) {
+SceneManager.prototype.getActorHandler = function (actorHandlerId) {
   return this.actorHandlers.get(actorHandlerId);
 };
 
-module.exports = ActorManager;
+module.exports = SceneManager;

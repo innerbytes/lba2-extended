@@ -1,26 +1,23 @@
 const { createActor, createPickableItem } = require("../../lib/actor");
-const ActorManager = require("../../lib/actorManager");
-const { DialogHandler } = require("../../lib/dialog");
+const SceneManager = require("../../lib/sceneManager");
 const { props } = require("./props");
 const forgotGazogemQuest = require("./quests/forgotGazogem");
 const twinsenBehavior = require("./actors/twinsen");
 const knartaWorkerBehavior = require("./actors/knartaWorker");
 
-// Outside of the Gazogem Factory scene (108)
-const thisScene = {
+const outsideOfGazogemeFactoryScene = {
   id: 108,
   afterLoad: afterLoad,
 };
-module.exports = thisScene;
+module.exports = outsideOfGazogemeFactoryScene;
 
 // Entities
 const knartaWorkerEntityId = 56;
 const gazogemEntityId = 305;
 
 function afterLoad(loadMode) {
-  // TODO - rename to sceneManager
-  // Creating scene manager with all quests of this scene
-  const actorManager = new ActorManager([forgotGazogemQuest]);
+  // Creating scene manager, passing all the quests for this scene
+  const sceneManager = new SceneManager([forgotGazogemQuest]);
 
   // Zones
   props.exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
@@ -45,15 +42,14 @@ function afterLoad(loadMode) {
   exitZones[2].setPos2([24957, 3000, 27805]);
 
   // Actors
-
-  const twinsenHandler = actorManager.createActorHandler(twinsenBehavior);
+  const twinsenHandler = sceneManager.createActorHandler(twinsenBehavior);
   const twinsen = scene.getObject(0);
 
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
   twinsenHandler.init(twinsen, props.exitZoneValue);
 
-  const knartaWorkerHandler = actorManager.createActorHandler(knartaWorkerBehavior);
+  const knartaWorkerHandler = sceneManager.createActorHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
     position: props.balconyCenter,
     talkColor: text.Colors.Seafoam,
@@ -71,10 +67,10 @@ function afterLoad(loadMode) {
   props.gazogemId = gazogem.getId();
 
   // Quests initialization
-  actorManager.initQuests();
+  sceneManager.initQuests();
 
   // Init quest states
   if (loadMode === scene.LoadModes.PlayerMovedHere) {
-    actorManager.initQuestStates();
+    sceneManager.initQuestStates();
   }
 }
