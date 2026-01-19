@@ -1,30 +1,38 @@
-const { createActor, createPickableItem } = require("./lib/actor");
-const { IsActorInZoneTrigger } = require("./lib/triggers");
-const { DialogHandler, Dialog } = require("./lib/dialog");
+const { createActor, createPickableItem } = require("../../lib/actor");
+const { IsActorInZoneTrigger } = require("../../lib/triggers");
+const { DialogHandler, Dialog } = require("../../lib/dialog");
+const { States } = require("./props");
 
 // Outside of the Gazogem Factory scene (108)
 const Scene = {
   id: 108,
   afterLoad: afterLoad,
+  // actors: [twinsen, knartaWorker]
+  props: {
+    balconyCenter: [20832, 3365, 27271],
+    exitZoneValue: null,
+    knartaWorkerId: null,
+    gazogemId: null,
+  },
+  // TODO - can control it using quest manager, as each quest can have different states
+  states: {
+    SceneContinues: 0,
+    CheckingEntranceFromBalcony: 1,
+    TwinsenOnBalconyWithoutGazogem: 2,
+    DialogIsStarting: 3,
+    DialogStarted: 4,
+    TwinsenIsTurning: 5,
+    DialogContinues: 6,
+    WorkerIsGivingGazogem: 7,
+    WorkerGaveGazogem: 8,
+    TwinsenThanks: 9,
+  },
 };
 module.exports = Scene;
 
 const knartaWorkerEntityId = 56;
 const gazogemEntityId = 305;
 const balconyCenter = [20832, 3365, 27271];
-
-const States = {
-  SceneContinues: 0,
-  CheckingEntranceFromBalcony: 1,
-  TwinsenOnBalconyWithoutGazogem: 2,
-  DialogIsStarting: 3,
-  DialogStarted: 4,
-  TwinsenIsTurning: 5,
-  DialogContinues: 6,
-  WorkerIsGivingGazogem: 7,
-  WorkerGaveGazogem: 8,
-  TwinsenThanks: 9,
-};
 
 let exitZoneValue;
 let knartaWorkerId;
@@ -104,6 +112,7 @@ function afterLoad(loadMode) {
   const twinsen = scene.getObject(0);
 
   exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
+  Scene.props.exitZoneValue = exitZoneValue;
 
   const exitZoneCount = 3;
   const exitZoneId = scene.addZones(exitZoneCount);
@@ -132,6 +141,7 @@ function afterLoad(loadMode) {
     handleLife: knartaWorkerLife,
   });
   knartaWorkerId = knartaWorker.getId();
+  Scene.props.knartaWorkerId = knartaWorkerId;
 
   // Add the gazogem item
   const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
@@ -142,7 +152,7 @@ function afterLoad(loadMode) {
     resetHeroStance: true,
   });
   gazogemId = gazogem.getId();
-
+  Scene.props.gazogemId = gazogemId;
   ({ initialDialog, mainDialog, finalDialog } = createDialogs(dialogHandler, knartaWorkerId));
 
   twinsenInExitZone = new IsActorInZoneTrigger(0, exitZoneValue);
