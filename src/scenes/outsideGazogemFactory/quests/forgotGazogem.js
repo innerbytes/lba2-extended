@@ -1,7 +1,8 @@
 const { Dialog } = require("../../../lib/dialog");
+const createQuest = require("../../../lib/quest");
 const { actors } = require("../props");
 
-const quest = {
+const quest = createQuest({
   id: "forgotGazogem",
   init: function (dialogHandler, knartaWorkerId) {
     this.dialogs = createDialogs(dialogHandler, knartaWorkerId);
@@ -22,11 +23,11 @@ const quest = {
     WorkerGaveGazogem: 8,
     TwinsenThanks: 9,
   },
-  selectBehavior: function (actorId) {
+  selectBehavior: function (actorHandlerId) {
     const sceneStore = this.useSceneStore();
     const state = sceneStore.state;
 
-    if (actorId === actors.twinsen) {
+    if (actorHandlerId === actors.twinsen) {
       if (!state || state === this.states.SceneContinues) {
         return "";
       }
@@ -48,7 +49,7 @@ const quest = {
       }
 
       return "busy";
-    } else if (actorId === actors.knartaWorker) {
+    } else if (actorHandlerId === actors.knartaWorker) {
       if (sceneStore.workerDisappears) {
         return "disappear";
       }
@@ -66,15 +67,7 @@ const quest = {
 
     return "";
   },
-
-  // TODO - make quest prototype that will have those facilitators
-  useSceneStore: function () {
-    return useSceneStore(this.id);
-  },
-  doSceneStore: function (callback) {
-    return doSceneStore((sceneStore) => callback(sceneStore[this.id]));
-  },
-};
+});
 
 module.exports = quest;
 

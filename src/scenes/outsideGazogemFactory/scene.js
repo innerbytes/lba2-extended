@@ -67,7 +67,7 @@ function afterLoad(loadMode) {
   });
   props.gazogemId = gazogem.getId();
 
-  // Quests
+  // Quests initialization
   const dialogHandler = new DialogHandler();
   forgotGazogemQuest.init(dialogHandler, props.knartaWorkerId);
 
