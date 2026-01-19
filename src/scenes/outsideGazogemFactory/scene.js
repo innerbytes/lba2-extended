@@ -62,7 +62,7 @@ function afterLoad(loadMode) {
   const twinsen = scene.getObject(0);
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
-  twinsenHandler.init(twinsen);
+  twinsenHandler.init(twinsen, Scene.props.exitZoneValue);
 
   const knartaWorkerHandler = new ActorHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {

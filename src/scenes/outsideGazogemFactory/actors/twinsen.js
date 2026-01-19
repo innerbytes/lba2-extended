@@ -5,8 +5,8 @@ let twinsenInExitZoneTrigger;
 
 // TODO - behaviors and coroutines can probably be main or per-quest, so we can segregate them better
 const actor = {
-  init: function () {
-    twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, Scene.props.exitZoneValue);
+  init: function (exitZoneValue) {
+    twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
   behaviours: {
     default: function () {
