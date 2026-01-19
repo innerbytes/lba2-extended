@@ -86,7 +86,7 @@ const actor = {
 
       return false;
     },
-    dialogGazogemFinal: function (objectId) {
+    dialogAboutGazogemFinal: function (objectId) {
       forgotGazogemQuest.dialogs.finalDialog.play();
 
       this.getActor(Scene.actors.knartaWorker).startCoroutine("leaving");

@@ -70,13 +70,7 @@ const actor = {
       yield doMove(M.TM_WAIT_NB_DIZIEME, 5);
       yield doMove(M.TM_ANIM, 1);
       yield doMove(M.TM_WAIT_NB_DIZIEME, 6);
-
-      // TODO - need to support
-      const id = yield doGetObjectId();
-
-      // TODO - can call it thtough static StateManager method
-      // yield doSceneStore((sceneStore) => StateManager.doBehavior(sceneStore[], this.id, "disappear"));
-      yield doSceneStore((sceneStore) => (sceneStore[id].behavior = "disappear"));
+      yield forgotGazogemQuest.doSceneStore((sceneStore) => (sceneStore.workerDisappears = true));
     },
   },
 };
