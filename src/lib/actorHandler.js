@@ -70,7 +70,7 @@ ActorHandler.prototype.startCoroutine = function (name, ...args) {
 };
 
 ActorHandler.prototype.getActor = function (actorBehaviorId) {
-  return this.actorManager.getHandler(actorBehaviorId);
+  return this.actorManager.getActorHandler(actorBehaviorId);
 };
 
 // TODO - add other coroutine methods as needed

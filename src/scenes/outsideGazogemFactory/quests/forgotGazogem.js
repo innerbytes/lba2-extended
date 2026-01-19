@@ -1,11 +1,11 @@
 const { Dialog } = require("../../../lib/dialog");
 const createQuest = require("../../../lib/quest");
-const { actors } = require("../props");
+const { actors, props } = require("../props");
 
 const quest = createQuest({
   id: "forgotGazogem",
-  init: function (dialogHandler, knartaWorkerId) {
-    this.dialogs = createDialogs(dialogHandler, knartaWorkerId);
+  init: function (sceneManager) {
+    this.dialogs = createDialogs(sceneManager.dialogHandler, props.knartaWorkerId);
   },
   initState: function () {
     const sceneStore = this.useSceneStore();

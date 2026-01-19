@@ -18,6 +18,10 @@ const knartaWorkerEntityId = 56;
 const gazogemEntityId = 305;
 
 function afterLoad(loadMode) {
+  // TODO - rename to sceneManager
+  // Creating scene manager with all quests of this scene
+  const actorManager = new ActorManager([forgotGazogemQuest]);
+
   // Zones
   props.exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
   console.log("Zone value for exit zones:", props.exitZoneValue);
@@ -41,16 +45,15 @@ function afterLoad(loadMode) {
   exitZones[2].setPos2([24957, 3000, 27805]);
 
   // Actors
-  const actorManager = new ActorManager();
 
-  const twinsenHandler = actorManager.createHandler(twinsenBehavior);
+  const twinsenHandler = actorManager.createActorHandler(twinsenBehavior);
   const twinsen = scene.getObject(0);
 
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
   twinsenHandler.init(twinsen, props.exitZoneValue);
 
-  const knartaWorkerHandler = actorManager.createHandler(knartaWorkerBehavior);
+  const knartaWorkerHandler = actorManager.createActorHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
     position: props.balconyCenter,
     talkColor: text.Colors.Seafoam,
@@ -68,121 +71,10 @@ function afterLoad(loadMode) {
   props.gazogemId = gazogem.getId();
 
   // Quests initialization
-  const dialogHandler = new DialogHandler();
-  forgotGazogemQuest.init(dialogHandler, props.knartaWorkerId);
+  actorManager.initQuests();
 
   // Init quest states
   if (loadMode === scene.LoadModes.PlayerMovedHere) {
-    forgotGazogemQuest.initState();
+    actorManager.initQuestStates();
   }
 }
-
-/*
-function twinsenLife(objectId) {
-  const sceneStore = useSceneStore();
-
-  if (sceneStore.state === States.CheckingEntranceFromBalcony) {
-    if (
-      scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) > 0 ||
-      scene.getGameVariable(127) > 0 // State after which Twinsen doesn't need gazogem anymore
-    ) {
-      sceneStore.state = States.SceneContinues;
-      return true;
-    }
-
-    const twinsen = scene.getObject(0);
-    if (twinsen.getPos().minus(balconyCenter).sqrMagnitude() < 2000 * 2000) {
-      sceneStore.state = States.TwinsenOnBalconyWithoutGazogem;
-      return false;
-    }
-
-    sceneStore.state = States.SceneContinues;
-    return true;
-  }
-
-  if (sceneStore.state === States.TwinsenOnBalconyWithoutGazogem) {
-    if (twinsenInExitZone.isTrue()) {
-      startDialogWithWorker(objectId);
-      sceneStore.state = States.DialogIsStarting;
-      return false;
-    }
-
-    return true;
-  }
-
-  if (sceneStore.state === States.DialogIsStarting) {
-    return false;
-  }
-
-  if (sceneStore.state === States.DialogStarted) {
-    initialDialog.play();
-
-    sceneStore.state = States.TwinsenIsTurning;
-    ida.life(objectId, ida.Life.LM_CINEMA_MODE, 0);
-
-    const twinsen = scene.getObject(0);
-    const knartaWorker = scene.getObject(knartaWorkerId);
-    startCoroutine(objectId, "twinsenIsTurning", getAngleToObject(twinsen, knartaWorker));
-
-    return false;
-  }
-
-  if (sceneStore.state === States.TwinsenIsTurning) {
-    return false;
-  }
-
-  if (sceneStore.state === States.DialogContinues) {
-    ida.life(objectId, ida.Life.LM_CAMERA_CENTER, 0);
-
-    mainDialog.play();
-
-    sceneStore.state = States.WorkerIsGivingGazogem;
-    startCoroutine(knartaWorkerId, "workerIsGivingGazogem");
-
-    return false;
-  }
-
-  if (sceneStore.state === States.WorkerIsGivingGazogem) {
-    return false;
-  }
-
-  if (sceneStore.state === States.WorkerGaveGazogem) {
-    if (sceneStore.gazogemIsPresent) {
-      return false;
-    }
-
-    ida.life(objectId, ida.Life.LM_SET_LIFE_POINT_OBJ, gazogemId, 255);
-    ida.life(gazogemId, ida.Life.LM_BETA, 1024);
-    sceneStore.gazogemIsPresent = true;
-
-    return false;
-  }
-
-  if (sceneStore.state === States.TwinsenThanks) {
-    finalDialog.play();
-
-    startCoroutine(knartaWorkerId, "workerIsLeaving");
-    ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
-
-    sceneStore.state = States.SceneContinues;
-
-    return false;
-  }
-
-  return true;
-}
-
-function knartaWorkerLife(objectId) {
-  const sceneStore = useSceneStore();
-  if (sceneStore.state === States.DialogIsStarting && !sceneStore.knartaIsInit) {
-    ida.life(objectId, ida.Life.LM_SET_ANIM_DIAL, 28);
-    sceneStore.knartaIsInit = true;
-    return;
-  }
-
-  if (sceneStore.state === States.SceneContinues && sceneStore.workerDisappears) {
-    ida.life(objectId, ida.Life.LM_SUICIDE);
-    sceneStore.workerDisappears = false;
-  }
-}
-*/
