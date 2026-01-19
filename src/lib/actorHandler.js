@@ -2,7 +2,11 @@ const StateManager = require("./stateManager");
 
 /** @typedef {import("@idajs/types").GameObject} GameObject */
 
-function ActorHandler(actorBehavior, behaviorHandler) {
+function ActorHandler(actorManager, actorBehavior) {
+  if (!actorManager || typeof actorManager !== "object") {
+    throw new TypeError("actorManager object must be provided");
+  }
+
   if (!actorBehavior || typeof actorBehavior !== "object") {
     throw new TypeError("actorBehavior object must be provided");
   }
@@ -11,12 +15,14 @@ function ActorHandler(actorBehavior, behaviorHandler) {
     throw new TypeError("actorBehavior must have a valid id property");
   }
 
+  this.actorManager = actorManager;
   this.actorBehavior = actorBehavior;
   this.id = actorBehavior.id;
   this.behaviors = actorBehavior.behaviors;
   this.defaultBehavior = actorBehavior.behaviors.default;
+  this.selectBehavior = actorBehavior.selectBehavior;
   this.coroutines = actorBehavior.coroutines;
-  this.stateManager = new StateManager(this.id, behaviorHandler);
+  this.stateManager = new StateManager(this.id, this.selectBehavior?.bind(this));
 }
 
 ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args) {
@@ -64,8 +70,7 @@ ActorHandler.prototype.startCoroutine = function (name, ...args) {
 };
 
 ActorHandler.prototype.getActor = function (actorBehaviorId) {
-  // TODO - implement, need to route through scene actor behaviors
-  return {};
+  return this.actorManager.getHandler(actorBehaviorId);
 };
 
 // TODO - add other coroutine methods as needed
@@ -79,3 +84,5 @@ function registerCoroutines(coroutines) {
     registerCoroutine(getCoroutineName(name), coroutine);
   }
 }
+
+module.exports = ActorHandler;

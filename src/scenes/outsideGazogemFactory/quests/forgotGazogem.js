@@ -23,9 +23,9 @@ const quest = {
     TwinsenThanks: 9,
   },
   selectBehavior: function (actorId) {
-    if (actorId === Scene.actors.twinsen) {
-      const state = this.useSceneStore().state;
+    const state = this.useSceneStore().state;
 
+    if (actorId === Scene.actors.twinsen) {
       if (!state || state === this.states.SceneContinues) {
         return "";
       }
@@ -48,7 +48,15 @@ const quest = {
 
       return "busy";
     } else if (actorId === Scene.actors.knartaWorker) {
-      // TODO - implement
+      if (state == this.states.DialogIsStarting) {
+        return "start";
+      }
+
+      if (state === this.states.WorkerGaveGazogem) {
+        return "giveGazogem";
+      }
+
+      return "";
     }
 
     return "";

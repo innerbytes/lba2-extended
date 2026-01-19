@@ -7,7 +7,7 @@ let twinsenInExitZoneTrigger;
 const L = ida.Life;
 const M = ida.Move;
 
-// Note - behaviors and coroutines can probably be main or per-quest, so we can segregate them better
+// Note - behaviors and coroutines can probably be both main or per-quest, so we can segregate them better
 const actor = {
   id: Scene.actors.twinsen,
   init: function (exitZoneValue) {
@@ -54,10 +54,9 @@ const actor = {
         ida.life(objectId, L.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
         ida.life(objectId, L.LM_SET_ANIM_DIAL, 28);
 
-        this.getActor(Scene.actors.knartaWorker).startCoroutine("startingDialog");
-
         const sceneStore = forgotGazogemQuest.useSceneStore();
         sceneStore.state = forgotGazogemQuest.states.DialogIsStarting;
+
         return false;
       }
 
@@ -128,3 +127,5 @@ function getAngleToObject(sourceObject, targetObject) {
   }
   return angle;
 }
+
+module.exports = actor;

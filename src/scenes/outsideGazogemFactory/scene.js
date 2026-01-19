@@ -1,6 +1,9 @@
 const { createActor, createPickableItem } = require("../../lib/actor");
+const ActorManager = require("../../lib/actorManager");
 const { DialogHandler } = require("../../lib/dialog");
 const forgotGazogemQuest = require("./quests/forgotGazogem");
+const twinsenBehavior = require("./actors/twinsen");
+const knartaWorkerBehavior = require("./actors/knartaWorker");
 
 // Outside of the Gazogem Factory scene (108)
 const Scene = {
@@ -46,14 +49,16 @@ function afterLoad(loadMode) {
   exitZones[2].setPos2([24957, 3000, 27805]);
 
   // Actors
-  // TODO - the hero actor handler should also get authority on handling quest states
-  const twinsenHandler = new ActorHandler(twinsenBahavior);
+  const actorManager = new ActorManager();
+
+  const twinsenHandler = actorManager.createHandler(twinsenBehavior);
   const twinsen = scene.getObject(0);
+
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
   twinsenHandler.init(twinsen, Scene.props.exitZoneValue);
 
-  const knartaWorkerHandler = new ActorHandler(knartaWorkerBehavior);
+  const knartaWorkerHandler = actorManager.createHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
     position: Scene.props.balconyCenter,
     talkColor: text.Colors.Seafoam,

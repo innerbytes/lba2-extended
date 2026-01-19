@@ -6,12 +6,22 @@ const M = ida.Move;
 
 const actor = {
   id: Scene.actors.knartaWorker,
+  // TODO - this can be common function for actor handler later, if it has info about all quests
+  selectBehavior: function () {
+    const behavior = forgotGazogemQuest.selectBehavior(this.id);
+    if (behavior) {
+      return behavior;
+    }
+
+    return "";
+  },
   behaviors: {
     start: function (objectId) {
       const sceneStore = useSceneStore(this.id);
       if (!sceneStore.hasStarted) {
         ida.life(objectId, L.LM_SET_ANIM_DIAL, 28);
         sceneStore.hasStarted = true;
+        this.startCoroutine("startingDialog");
       }
     },
     giveGazogem: function (objectId) {
@@ -70,3 +80,5 @@ const actor = {
     },
   },
 };
+
+module.exports = actor;
