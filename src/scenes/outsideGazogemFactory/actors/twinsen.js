@@ -1,4 +1,5 @@
 const Scene = require("../scene");
+const forgotGazogemQuest = require("../quests/forgotGazogem");
 const { IsActorInZoneTrigger } = require("../../../lib/triggers");
 
 let twinsenInExitZoneTrigger;
@@ -12,12 +13,21 @@ const actor = {
   init: function (exitZoneValue) {
     twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
-  behaviours: {
+  // TODO - this can be common function for actor handler later, if it has info about all quests
+  selectBehavior: function () {
+    const behavior = forgotGazogemQuest.selectBehavior(this.id);
+    if (behavior) {
+      return behavior;
+    }
+
+    return "";
+  },
+  behaviors: {
     default: () => true,
     busy: () => false,
     checkingEntranceFromBalcony: function () {
-      const sceneStore = useSceneStore();
-      const States = Scene.states;
+      const sceneStore = forgotGazogemQuest.useSceneStore();
+      const States = forgotGazogemQuest.states;
 
       if (
         scene.getGameVariable(scene.GameVariables.INV_GAZOGEM) > 0 ||
@@ -46,18 +56,18 @@ const actor = {
 
         this.getActor(Scene.actors.knartaWorker).startCoroutine("startingDialog");
 
-        const sceneStore = useSceneStore();
-        sceneStore.state = Scene.states.DialogIsStarting;
+        const sceneStore = forgotGazogemQuest.useSceneStore();
+        sceneStore.state = forgotGazogemQuest.states.DialogIsStarting;
         return false;
       }
 
       return true;
     },
     dialogAboutGazogemStart: function (objectId) {
-      Scene.dialogs.initialDialog.play();
+      forgotGazogemQuest.dialogs.initialDialog.play();
 
-      const sceneStore = useSceneStore();
-      sceneStore.state = Scene.states.TwinsenIsTurning;
+      const sceneStore = forgotGazogemQuest.useSceneStore();
+      sceneStore.state = forgotGazogemQuest.states.TwinsenIsTurning;
       ida.life(objectId, L.LM_CINEMA_MODE, 0);
 
       const twinsen = scene.getObject(0);
@@ -68,23 +78,23 @@ const actor = {
     },
     dialogAboutGazogemMain: function (objectId) {
       ida.life(objectId, L.LM_CAMERA_CENTER, 0);
-      Scene.dialogs.mainDialog.play();
+      forgotGazogemQuest.dialogs.mainDialog.play();
 
-      const sceneStore = useSceneStore();
-      sceneStore.state = Scene.states.WorkerIsGivingGazogem;
+      const sceneStore = forgotGazogemQuest.useSceneStore();
+      sceneStore.state = forgotGazogemQuest.states.WorkerIsGivingGazogem;
 
       this.getActor(Scene.actors.knartaWorker).startCoroutine("givingGazogem");
 
       return false;
     },
     dialogGazogemFinal: function (objectId) {
-      Scene.dialogs.finalDialog.play();
+      forgotGazogemQuest.dialogs.finalDialog.play();
 
       this.getActor(Scene.actors.knartaWorker).startCoroutine("leaving");
       ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.PlayerControl);
 
-      const sceneStore = useSceneStore();
-      sceneStore.state = Scene.states.SceneContinues;
+      const sceneStore = forgotGazogemQuest.useSceneStore();
+      sceneStore.state = forgotGazogemQuest.states.SceneContinues;
 
       return false;
     },
@@ -95,8 +105,8 @@ const actor = {
       yield doMove(M.TM_WAIT_NB_DIZIEME, 5);
       yield doMove(M.TM_ANGLE, targetAngle);
       yield doMove(M.TM_WAIT_NB_DIZIEME, 5);
-      yield doSceneStore((sceneStore) => {
-        sceneStore.state = Scene.states.DialogContinues;
+      yield forgotGazogemQuest.doSceneStore((sceneStore) => {
+        sceneStore.state = forgotGazogemQuest.states.DialogContinues;
       });
     },
   },

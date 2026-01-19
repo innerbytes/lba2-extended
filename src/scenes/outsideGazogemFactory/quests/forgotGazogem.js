@@ -1,12 +1,13 @@
 const { Dialog } = require("../../../lib/dialog");
+const Scene = require("../../outsideGazogemFactory/scene");
 
 const quest = {
   id: "forgotGazogem",
   init: function (dialogHandler, knartaWorkerId) {
-    createDialogs(dialogHandler, knartaWorkerId);
+    this.dialogs = createDialogs(dialogHandler, knartaWorkerId);
   },
   initState: function () {
-    const sceneStore = useSceneStore();
+    const sceneStore = this.useSceneStore();
     sceneStore.state = this.states.CheckingEntranceFromBalcony;
   },
   states: {
@@ -20,6 +21,45 @@ const quest = {
     WorkerIsGivingGazogem: 7,
     WorkerGaveGazogem: 8,
     TwinsenThanks: 9,
+  },
+  selectBehavior: function (actorId) {
+    if (actorId === Scene.actors.twinsen) {
+      const state = this.useSceneStore().state;
+
+      if (!state || state === this.states.SceneContinues) {
+        return "";
+      }
+
+      if (state === this.states.CheckingEntranceFromBalcony) {
+        return "checkingEntranceFromBalcony";
+      }
+      if (state === this.states.TwinsenOnBalconyWithoutGazogem) {
+        return "onBalconyWithoutGazogem";
+      }
+      if (state === this.states.DialogStarted) {
+        return "dialogAboutGazogemStart";
+      }
+      if (state === this.states.DialogContinues) {
+        return "dialogAboutGazogemMain";
+      }
+      if (state === this.states.TwinsenThanks) {
+        return "dialogGazogemFinal";
+      }
+
+      return "busy";
+    } else if (actorId === Scene.actors.knartaWorker) {
+      // TODO - implement
+    }
+
+    return "";
+  },
+
+  // TODO - make quest prototype that will have those facilitators
+  useSceneStore: function () {
+    return useSceneStore(this.id);
+  },
+  doSceneStore: function (callback) {
+    return doSceneStore((sceneStore) => callback(sceneStore[this.id]));
   },
 };
 

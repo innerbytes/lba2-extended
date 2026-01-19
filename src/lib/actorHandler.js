@@ -1,6 +1,8 @@
+const StateManager = require("./stateManager");
+
 /** @typedef {import("@idajs/types").GameObject} GameObject */
 
-function ActorHandler(actorBehavior, stateManager) {
+function ActorHandler(actorBehavior, behaviorHandler) {
   if (!actorBehavior || typeof actorBehavior !== "object") {
     throw new TypeError("actorBehavior object must be provided");
   }
@@ -14,7 +16,7 @@ function ActorHandler(actorBehavior, stateManager) {
   this.behaviors = actorBehavior.behaviors;
   this.defaultBehavior = actorBehavior.behaviors.default;
   this.coroutines = actorBehavior.coroutines;
-  this.stateManager = stateManager ?? new SceneManager(id); // TODO - implement
+  this.stateManager = new StateManager(this.id, behaviorHandler);
 }
 
 ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args) {

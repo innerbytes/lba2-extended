@@ -1,11 +1,12 @@
 const Scene = require("../scene");
+const forgotGazogemQuest = require("../quests/forgotGazogem");
 
 const L = ida.Life;
 const M = ida.Move;
 
 const actor = {
   id: Scene.actors.knartaWorker,
-  behaviours: {
+  behaviors: {
     start: function (objectId) {
       const sceneStore = useSceneStore(this.id);
       if (!sceneStore.hasStarted) {
@@ -38,20 +39,20 @@ const actor = {
 
       yield doMove(M.TM_WAIT_NB_SECOND, 2);
       yield doMove(M.TM_FACE_TWINSEN, -1);
-      yield doSceneStore((sceneStore) => {
-        sceneStore.state = Scene.states.DialogStarted;
+      yield forgotGazogemQuest.doSceneStore((sceneStore) => {
+        sceneStore.state = forgotGazogemQuest.states.DialogStarted;
       });
     },
     givingGazogem: function* () {
       yield doMove(M.TM_ANGLE, 3072);
-      yield doSceneStore((sceneStore) => {
-        sceneStore.state = Scene.states.WorkerGaveGazogem;
+      yield forgotGazogemQuest.doSceneStore((sceneStore) => {
+        sceneStore.state = forgotGazogemQuest.states.WorkerGaveGazogem;
       });
       yield doMove(M.TM_SAMPLE, 153);
       yield doMove(M.TM_ANIM, 0);
       yield doMove(M.TM_FACE_TWINSEN, -1);
-      yield doSceneStore((sceneStore) => {
-        sceneStore.state = Scene.states.TwinsenThanks;
+      yield forgotGazogemQuest.doSceneStore((sceneStore) => {
+        sceneStore.state = forgotGazogemQuest.states.TwinsenThanks;
       });
     },
     leaving: function* () {
@@ -60,9 +61,12 @@ const actor = {
       yield doMove(M.TM_ANIM, 1);
       yield doMove(M.TM_WAIT_NB_DIZIEME, 6);
 
+      // TODO - need to support
+      const id = yield doGetObjectId();
+
       // TODO - can call it thtough static StateManager method
-      // yield doSceneStore((sceneStore) => StateManager.doBehavior(sceneStore, "disappear"));
-      yield doSceneStore((sceneStore) => (sceneStore.behaviour.disappear = true));
+      // yield doSceneStore((sceneStore) => StateManager.doBehavior(sceneStore[], this.id, "disappear"));
+      yield doSceneStore((sceneStore) => (sceneStore[id].behavior = "disappear"));
     },
   },
 };
