@@ -1,5 +1,5 @@
 const { Dialog } = require("../../../lib/dialog");
-const Scene = require("../../outsideGazogemFactory/scene");
+const { actors } = require("../props");
 
 const quest = {
   id: "forgotGazogem",
@@ -26,7 +26,7 @@ const quest = {
     const sceneStore = this.useSceneStore();
     const state = sceneStore.state;
 
-    if (actorId === Scene.actors.twinsen) {
+    if (actorId === actors.twinsen) {
       if (!state || state === this.states.SceneContinues) {
         return "";
       }
@@ -48,7 +48,7 @@ const quest = {
       }
 
       return "busy";
-    } else if (actorId === Scene.actors.knartaWorker) {
+    } else if (actorId === actors.knartaWorker) {
       if (sceneStore.workerDisappears) {
         return "disappear";
       }

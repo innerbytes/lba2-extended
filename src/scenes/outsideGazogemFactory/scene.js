@@ -1,26 +1,17 @@
 const { createActor, createPickableItem } = require("../../lib/actor");
 const ActorManager = require("../../lib/actorManager");
 const { DialogHandler } = require("../../lib/dialog");
+const { props } = require("./props");
 const forgotGazogemQuest = require("./quests/forgotGazogem");
 const twinsenBehavior = require("./actors/twinsen");
 const knartaWorkerBehavior = require("./actors/knartaWorker");
 
 // Outside of the Gazogem Factory scene (108)
-const Scene = {
+const thisScene = {
   id: 108,
   afterLoad: afterLoad,
-  actors: {
-    twinsen: "twinsen",
-    knartaWorker: "knartaWorker",
-  },
-  props: {
-    balconyCenter: [20832, 3365, 27271],
-    exitZoneValue: null,
-    knartaWorkerId: null,
-    gazogemId: null,
-  },
 };
-module.exports = Scene;
+module.exports = thisScene;
 
 // Entities
 const knartaWorkerEntityId = 56;
@@ -28,14 +19,15 @@ const gazogemEntityId = 305;
 
 function afterLoad(loadMode) {
   // Zones
-  Scene.props.exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
+  props.exitZoneValue = scene.findFreeZoneValue(object.ZoneTypes.Sceneric);
+  console.log("Zone value for exit zones:", props.exitZoneValue);
 
   const exitZoneCount = 3;
   const exitZoneId = scene.addZones(exitZoneCount);
   const exitZones = Array.from({ length: exitZoneCount }, (_, i) => scene.getZone(exitZoneId + i));
   exitZones.forEach((zone) => {
     zone.setType(object.ZoneTypes.Sceneric);
-    zone.setZoneValue(Scene.props.exitZoneValue);
+    zone.setZoneValue(props.exitZoneValue);
   });
 
   // Area where he jumps to the ground from the Refinery Balcony
@@ -56,28 +48,28 @@ function afterLoad(loadMode) {
 
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
-  twinsenHandler.init(twinsen, Scene.props.exitZoneValue);
+  twinsenHandler.init(twinsen, props.exitZoneValue);
 
   const knartaWorkerHandler = actorManager.createHandler(knartaWorkerBehavior);
   const knartaWorker = createActor(knartaWorkerEntityId, {
-    position: Scene.props.balconyCenter,
+    position: props.balconyCenter,
     talkColor: text.Colors.Seafoam,
     isDisabled: true,
   });
-  Scene.props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker);
+  props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker);
 
   const gazogem = createPickableItem(gazogemEntityId, scene.GameVariables.INV_GAZOGEM, {
     isDisabled: true,
-    position: Scene.props.balconyCenter.minus([600, 0, 0]),
+    position: props.balconyCenter.minus([600, 0, 0]),
     clearHoloPos: 140,
     recenterCamera: true,
     resetHeroStance: true,
   });
-  Scene.props.gazogemId = gazogem.getId();
+  props.gazogemId = gazogem.getId();
 
   // Quests
   const dialogHandler = new DialogHandler();
-  forgotGazogemQuest.init(dialogHandler, Scene.props.knartaWorkerId);
+  forgotGazogemQuest.init(dialogHandler, props.knartaWorkerId);
 
   // Init quest states
   if (loadMode === scene.LoadModes.PlayerMovedHere) {

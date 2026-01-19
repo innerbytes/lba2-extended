@@ -1,6 +1,6 @@
-const Scene = require("../scene");
 const forgotGazogemQuest = require("../quests/forgotGazogem");
 const { IsActorInZoneTrigger } = require("../../../lib/triggers");
+const { actors, props } = require("../props");
 
 let twinsenInExitZoneTrigger;
 
@@ -9,7 +9,7 @@ const M = ida.Move;
 
 // Note - behaviors and coroutines can probably be both main or per-quest, so we can segregate them better
 const actor = {
-  id: Scene.actors.twinsen,
+  id: actors.twinsen,
   init: function (exitZoneValue) {
     twinsenInExitZoneTrigger = new IsActorInZoneTrigger(0, exitZoneValue);
   },
@@ -38,7 +38,7 @@ const actor = {
       }
 
       const twinsen = scene.getObject(0);
-      if (twinsen.getPos().minus(Scene.props.balconyCenter).sqrMagnitude() < 2000 * 2000) {
+      if (twinsen.getPos().minus(props.balconyCenter).sqrMagnitude() < 2000 * 2000) {
         sceneStore.state = States.TwinsenOnBalconyWithoutGazogem;
         return false;
       }
@@ -48,7 +48,7 @@ const actor = {
     },
     onBalconyWithoutGazogem: function (objectId) {
       if (twinsenInExitZoneTrigger.isTrue()) {
-        ida.life(objectId, L.LM_SET_LIFE_POINT_OBJ, Scene.props.knartaWorkerId, 255);
+        ida.life(objectId, L.LM_SET_LIFE_POINT_OBJ, props.knartaWorkerId, 255);
         ida.life(objectId, L.LM_CINEMA_MODE, 1);
         ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.NoMovement);
         ida.life(objectId, L.LM_COMPORTEMENT_HERO, object.TwinsenStances.Normal);
@@ -70,7 +70,7 @@ const actor = {
       ida.life(objectId, L.LM_CINEMA_MODE, 0);
 
       const twinsen = scene.getObject(0);
-      const knartaWorker = scene.getObject(Scene.props.knartaWorkerId);
+      const knartaWorker = scene.getObject(props.knartaWorkerId);
       this.startCoroutine("turningTowardsWorker", getAngleToObject(twinsen, knartaWorker));
 
       return false;
@@ -82,14 +82,14 @@ const actor = {
       const sceneStore = forgotGazogemQuest.useSceneStore();
       sceneStore.state = forgotGazogemQuest.states.WorkerIsGivingGazogem;
 
-      this.getActor(Scene.actors.knartaWorker).startCoroutine("givingGazogem");
+      this.getActor(actors.knartaWorker).startCoroutine("givingGazogem");
 
       return false;
     },
     dialogAboutGazogemFinal: function (objectId) {
       forgotGazogemQuest.dialogs.finalDialog.play();
 
-      this.getActor(Scene.actors.knartaWorker).startCoroutine("leaving");
+      this.getActor(actors.knartaWorker).startCoroutine("leaving");
       ida.life(objectId, L.LM_SET_CONTROL, object.ControlModes.PlayerControl);
 
       const sceneStore = forgotGazogemQuest.useSceneStore();

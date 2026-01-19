@@ -1,11 +1,11 @@
-const Scene = require("../scene");
 const forgotGazogemQuest = require("../quests/forgotGazogem");
+const { props, actors } = require("../props");
 
 const L = ida.Life;
 const M = ida.Move;
 
 const actor = {
-  id: Scene.actors.knartaWorker,
+  id: actors.knartaWorker,
   // TODO - this can be common function for actor handler later, if it has info about all quests
   selectBehavior: function () {
     const behavior = forgotGazogemQuest.selectBehavior(this.id);
@@ -30,8 +30,8 @@ const actor = {
         return;
       }
 
-      ida.life(objectId, L.LM_SET_LIFE_POINT_OBJ, Scene.props.gazogemId, 255);
-      ida.life(Scene.props.gazogemId, L.LM_BETA, 1024);
+      ida.life(objectId, L.LM_SET_LIFE_POINT_OBJ, props.gazogemId, 255);
+      ida.life(props.gazogemId, L.LM_BETA, 1024);
       sceneStore.hasGivenGazogem = true;
     },
     disappear: function (objectId) {

@@ -34,12 +34,12 @@ ActorHandler.prototype.init = function (/** @type {GameObject} */ actor, ...args
 
   // Life script registration
   if (this.actorBehavior.behaviors && Object.keys(this.actorBehavior.behaviors).length) {
-    actor.handleLifeScript(this.handleLife);
+    actor.handleLifeScript(this.handleLife.bind(this));
   }
 
   // Move script registration
   if (this.actorBehavior.coroutines && Object.keys(this.actorBehavior.coroutines).length) {
-    registerCoroutines(this.actorBehavior.coroutines);
+    registerCoroutines(this.id, this.actorBehavior.coroutines);
     actor.handleMoveScript();
   }
 
@@ -79,9 +79,9 @@ function getCoroutineName(id, originalName) {
   return `${id}_${originalName}`;
 }
 
-function registerCoroutines(coroutines) {
+function registerCoroutines(id, coroutines) {
   for (const [name, coroutine] of Object.entries(coroutines)) {
-    registerCoroutine(getCoroutineName(name), coroutine);
+    registerCoroutine(getCoroutineName(id, name), coroutine);
   }
 }
 
