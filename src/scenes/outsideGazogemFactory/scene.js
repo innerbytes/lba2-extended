@@ -62,8 +62,6 @@ function afterLoad(loadMode) {
   const twinsen = scene.getObject(0);
   // TODO - be able to return move script handling to the vanilla engine
   // Twinsen has no move scripts on this scene, but for general case we need to be able to get back to handle original move scripts
-  twinsen.handleMoveScript();
-  twinsen.handleLifeScript(twinsenHandler.handleLife);
   twinsenHandler.init(twinsen);
 
   const knartaWorkerHandler = new ActorHandler(knartaWorkerBehavior);
@@ -71,8 +69,6 @@ function afterLoad(loadMode) {
     position: Scene.props.balconyCenter,
     talkColor: text.Colors.Seafoam,
     isDisabled: true,
-    handleMove: true,
-    handleLife: knartaWorkerHandler.handleLife,
   });
   Scene.props.knartaWorkerId = knartaWorkerHandler.init(knartaWorker);
 

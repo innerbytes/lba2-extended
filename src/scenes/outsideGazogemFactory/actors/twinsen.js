@@ -56,7 +56,11 @@ const actor = {
 
       const twinsen = scene.getObject(0);
       const knartaWorker = scene.getObject(Scene.props.knartaWorkerId);
-      startCoroutine(objectId, "twinsenIsTurning", getAngleToObject(twinsen, knartaWorker));
+      startCoroutine(
+        objectId,
+        this.getCoroutine("turningTowardsWorker"),
+        getAngleToObject(twinsen, knartaWorker)
+      );
 
       return false;
     },
@@ -70,7 +74,8 @@ const actor = {
       sceneStore.state = Scene.states.WorkerIsGivingGazogem;
 
       // TODO - do not directly start coroutine on other object, but communicate through message
-      startCoroutine(Scene.props.knartaWorkerId, "workerIsGivingGazogem");
+      // startCoroutine(Scene.props.knartaWorkerId, "workerIsGivingGazogem");
+      this.message("workerIsGivingGazogem");
 
       return false;
     },
@@ -79,7 +84,8 @@ const actor = {
 
       Scene.dialogs.finalDialog.play();
 
-      startCoroutine(Scene.props.knartaWorkerId, "workerIsLeaving");
+      // startCoroutine(Scene.props.knartaWorkerId, "workerIsLeaving");
+      this.message("workerIsLeaving");
       ida.life(objectId, ida.Life.LM_SET_CONTROL, object.ControlModes.PlayerControl);
 
       sceneStore.state = Scene.states.SceneContinues;
