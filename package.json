@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "chokidar-cli": "^3.0.0",
-    "@idajs/types": "^0.2.0",
+    "@idajs/types": "0.2.15-dev.54",
     "@idajs/sync": "^1.1.0",
     "yazl": "^3.3.1"
   }

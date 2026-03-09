@@ -63,7 +63,10 @@ const actor = {
 
       const twinsen = scene.getObject(0);
       const knartaWorker = scene.getObject(props.knartaWorkerId);
-      this.startCoroutine("turningTowardsWorker", getAngleToObject(twinsen, knartaWorker));
+      this.startCoroutine(
+        "turningTowardsWorker",
+        object.getAngleFromToPosition(twinsen.getPos(), knartaWorker.getPos())
+      );
 
       return false;
     },
@@ -102,22 +105,5 @@ const actor = {
     },
   },
 };
-
-// TODO - this will be moved to be an objectHelper function
-function getAngleToObject(sourceObject, targetObject) {
-  const sourcePos = sourceObject.getPos();
-  const targetPos = targetObject.getPos();
-
-  const deltaX = targetPos[0] - sourcePos[0];
-  const deltaZ = targetPos[2] - sourcePos[2];
-  const angleRad = Math.atan2(deltaX, deltaZ);
-
-  // Convertor functions will be fixed to always return positive angles
-  let angle = object.radiansToAngle(angleRad);
-  if (angle < 0) {
-    angle += 4096;
-  }
-  return angle;
-}
 
 module.exports = actor;
